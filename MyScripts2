@@ -1,4 +1,4 @@
--- DrunixHub (Простой и надёжный)
+-- DrunixHub (Исправленное меню + чёрная обводка)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:FindFirstChild("Humanoid")
@@ -143,9 +143,9 @@ game:GetService("RunService").Heartbeat:Connect(function()
 end)
 
 -- GUI
-local gui = Instance.new("ScreenGui")
-gui.Name = "DrunixHub"
-gui.ResetOnSpawn = false
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "DrunixHub"
+screenGui.ResetOnSpawn = false
 
 -- Кнопка входа "DH"
 local openBtn = Instance.new("TextButton")
@@ -153,75 +153,78 @@ openBtn.Size = UDim2.new(0, 70, 0, 70)
 openBtn.Position = UDim2.new(0.5, -35, 0.5, -35)
 openBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 openBtn.BackgroundTransparency = 0
-openBtn.BorderSizePixel = 0
+openBtn.BorderSizePixel = 2
+openBtn.BorderColor3 = Color3.fromRGB(0, 0, 0)
 openBtn.Text = "DH"
 openBtn.TextColor3 = Color3.fromRGB(180, 0, 0)
-openBtn.TextSize = 28
+openBtn.TextSize = 30
 openBtn.Font = Enum.Font.GothamBold
 openBtn.Draggable = true
 openBtn.Active = true
-local corner = Instance.new("UICorner", openBtn)
-corner.CornerRadius = UDim.new(1, 0)
+local openCorner = Instance.new("UICorner", openBtn)
+openCorner.CornerRadius = UDim.new(1, 0)
 
--- Меню
-local menu = Instance.new("Frame")
-menu.Size = UDim2.new(0, 350, 0, 520)
-menu.Position = UDim2.new(0.5, -175, 0.5, -260)
-menu.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-menu.BackgroundTransparency = 0.1
-menu.BorderSizePixel = 0
-menu.Visible = false
-menu.Active = true
-menu.Draggable = true
-local menuCorner = Instance.new("UICorner", menu)
+-- Меню (с чёрной обводкой)
+local menuFrame = Instance.new("Frame")
+menuFrame.Size = UDim2.new(0, 340, 0, 480)
+menuFrame.Position = UDim2.new(0.5, -170, 0.5, -240)
+menuFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+menuFrame.BackgroundTransparency = 0.1
+menuFrame.BorderSizePixel = 2
+menuFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+menuFrame.Visible = false
+menuFrame.Active = true
+menuFrame.Draggable = true
+local menuCorner = Instance.new("UICorner", menuFrame)
 menuCorner.CornerRadius = UDim.new(0, 20)
 
--- Заголовок
-local title = Instance.new("TextLabel", menu)
+-- Заголовок (белый)
+local title = Instance.new("TextLabel", menuFrame)
 title.Size = UDim2.new(1, 0, 0, 45)
 title.Position = UDim2.new(0, 0, 0, 0)
 title.Text = "Drunix Hub"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.TextSize = 26
+title.TextSize = 28
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.GothamBold
 
--- Закрыть
-local close = Instance.new("TextButton", menu)
-close.Size = UDim2.new(0, 35, 0, 35)
-close.Position = UDim2.new(1, -40, 0, 5)
-close.Text = "✕"
-close.TextColor3 = Color3.fromRGB(255, 255, 255)
-close.TextSize = 20
-close.BackgroundTransparency = 1
-close.Font = Enum.Font.GothamBold
-close.MouseButton1Click:Connect(function()
+-- Кнопка закрытия
+local closeBtn = Instance.new("TextButton", menuFrame)
+closeBtn.Size = UDim2.new(0, 35, 0, 35)
+closeBtn.Position = UDim2.new(1, -40, 0, 5)
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+closeBtn.TextSize = 22
+closeBtn.BackgroundTransparency = 1
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.MouseButton1Click:Connect(function()
     menuOpen = false
-    menu.Visible = false
+    menuFrame.Visible = false
 end)
 
--- Функция создания кнопки
-local function MakeBtn(parent, text, y, callback)
+-- Функция создания кнопки (с чёрной обводкой)
+local function MakeButton(parent, text, yPos, callback)
     local btn = Instance.new("TextButton", parent)
-    btn.Size = UDim2.new(0.85, 0, 0, 32)
-    btn.Position = UDim2.new(0.075, 0, y, 0)
+    btn.Size = UDim2.new(0.8, 0, 0, 32)
+    btn.Position = UDim2.new(0.1, 0, yPos, 0)
     btn.Text = text
     btn.TextColor3 = Color3.fromRGB(0, 0, 0)
     btn.TextSize = 14
     btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    btn.BackgroundTransparency = 0.2
-    btn.BorderSizePixel = 0
+    btn.BackgroundTransparency = 0.15
+    btn.BorderSizePixel = 1
+    btn.BorderColor3 = Color3.fromRGB(0, 0, 0)
     local c = Instance.new("UICorner", btn)
     c.CornerRadius = UDim.new(0, 10)
     btn.MouseButton1Click:Connect(callback)
     return btn
 end
 
--- Функция создания ползунка
-local function MakeSlider(parent, labelText, y, minVal, maxVal, defaultVal, callback)
+-- Функция создания ползунка (с чёрной обводкой)
+local function MakeSlider(parent, labelText, yPos, minVal, maxVal, defaultVal, callback)
     local label = Instance.new("TextLabel", parent)
-    label.Size = UDim2.new(0.85, 0, 0, 18)
-    label.Position = UDim2.new(0.075, 0, y, 0)
+    label.Size = UDim2.new(0.8, 0, 0, 18)
+    label.Position = UDim2.new(0.1, 0, yPos, 0)
     label.Text = labelText .. ": " .. defaultVal
     label.TextColor3 = Color3.fromRGB(0, 0, 0)
     label.TextSize = 12
@@ -229,11 +232,12 @@ local function MakeSlider(parent, labelText, y, minVal, maxVal, defaultVal, call
     label.Font = Enum.Font.Gotham
     
     local slider = Instance.new("Frame", parent)
-    slider.Size = UDim2.new(0.85, 0, 0, 6)
-    slider.Position = UDim2.new(0.075, 0, y + 0.04, 0)
+    slider.Size = UDim2.new(0.8, 0, 0, 6)
+    slider.Position = UDim2.new(0.1, 0, yPos + 0.04, 0)
     slider.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     slider.BackgroundTransparency = 0.3
-    slider.BorderSizePixel = 0
+    slider.BorderSizePixel = 1
+    slider.BorderColor3 = Color3.fromRGB(0, 0, 0)
     local sCorner = Instance.new("UICorner", slider)
     sCorner.CornerRadius = UDim.new(1, 0)
     
@@ -246,7 +250,8 @@ local function MakeSlider(parent, labelText, y, minVal, maxVal, defaultVal, call
     btn.Size = UDim2.new(0, 16, 0, 16)
     btn.Position = UDim2.new(0.2, -8, 0.5, -8)
     btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    btn.BorderSizePixel = 0
+    btn.BorderSizePixel = 1
+    btn.BorderColor3 = Color3.fromRGB(0, 0, 0)
     btn.Text = ""
     local bCorner = Instance.new("UICorner", btn)
     bCorner.CornerRadius = UDim.new(1, 0)
@@ -278,14 +283,14 @@ local function MakeSlider(parent, labelText, y, minVal, maxVal, defaultVal, call
         end
     end)
     
-    return label, slider, fill, btn
+    return label
 end
 
 -- Создание элементов меню
 local y = 0.08
 
 -- NoClip
-local ncBtn = MakeBtn(menu, "NoClip: OFF", y, function()
+local ncBtn = MakeButton(menuFrame, "NoClip: OFF", y, function()
     noclip = not noclip
     SetNoClip(noclip)
     ncBtn.Text = noclip and "NoClip: ON" or "NoClip: OFF"
@@ -294,7 +299,7 @@ end)
 y = y + 0.07
 
 -- InfJump
-local ijBtn = MakeBtn(menu, "InfJump: OFF", y, function()
+local ijBtn = MakeButton(menuFrame, "InfJump: OFF", y, function()
     infJump = not infJump
     SetInfJump(infJump)
     if infJump then startInfJump() end
@@ -304,7 +309,7 @@ end)
 y = y + 0.07
 
 -- God Mode
-local godBtn = MakeBtn(menu, "God Mode: OFF", y, function()
+local godBtn = MakeButton(menuFrame, "God Mode: OFF", y, function()
     god = not god
     SetGod(god)
     godBtn.Text = god and "God Mode: ON" or "God Mode: OFF"
@@ -313,14 +318,14 @@ end)
 y = y + 0.07
 
 -- Walk Speed
-local walkLabel, walkSlider, walkFill, walkBtn = MakeSlider(menu, "Walk Speed", y, 1, 500, 16, function(v)
+MakeSlider(menuFrame, "Walk Speed", y, 1, 500, 16, function(v)
     walkSpeed = v
     if hum then hum.WalkSpeed = v end
 end)
 y = y + 0.09
 
 -- Fun Mode
-local funBtn = MakeBtn(menu, "Fun Mode: OFF", y, function()
+local funBtn = MakeButton(menuFrame, "Fun Mode: OFF", y, function()
     funMode = not funMode
     funBtn.Text = funMode and "Fun Mode: ON" or "Fun Mode: OFF"
     funBtn.TextColor3 = funMode and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
@@ -328,7 +333,7 @@ end)
 y = y + 0.07
 
 -- Mode
-local modeBtn = MakeBtn(menu, "Mode: Circle", y, function()
+local modeBtn = MakeButton(menuFrame, "Mode: Circle", y, function()
     local modes = {"Circle", "Follow", "Spin"}
     local current = 1
     for i, v in ipairs(modes) do
@@ -341,15 +346,15 @@ end)
 y = y + 0.07
 
 -- Fun Speed
-local funLabel, funSlider, funFill, funBtnSlider = MakeSlider(menu, "Fun Speed", y, 1, 100, 20, function(v)
+MakeSlider(menuFrame, "Fun Speed", y, 1, 100, 20, function(v)
     funSpeed = v
 end)
 y = y + 0.09
 
--- Target
-local targetLabel = Instance.new("TextLabel", menu)
-targetLabel.Size = UDim2.new(0.85, 0, 0, 18)
-targetLabel.Position = UDim2.new(0.075, 0, y, 0)
+-- Target Label
+local targetLabel = Instance.new("TextLabel", menuFrame)
+targetLabel.Size = UDim2.new(0.8, 0, 0, 18)
+targetLabel.Position = UDim2.new(0.1, 0, y, 0)
 targetLabel.Text = "Target: Auto"
 targetLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
 targetLabel.TextSize = 12
@@ -357,27 +362,14 @@ targetLabel.BackgroundTransparency = 1
 targetLabel.Font = Enum.Font.Gotham
 y = y + 0.04
 
--- Обновление списка игроков
-local function UpdatePlayerList()
-    local list = {}
-    for _, p in pairs(game:GetService("Players"):GetPlayers()) do
-        if p ~= player then
-            table.insert(list, p.Name)
-        end
-    end
-    if #list == 0 then
-        table.insert(list, "No players")
-    end
-    return list
-end
-
--- Список игроков
-local playerFrame = Instance.new("Frame", menu)
-playerFrame.Size = UDim2.new(0.85, 0, 0, 0.12)
-playerFrame.Position = UDim2.new(0.075, 0, y + 0.02, 0)
+-- Список игроков (с чёрной обводкой)
+local playerFrame = Instance.new("Frame", menuFrame)
+playerFrame.Size = UDim2.new(0.8, 0, 0, 0.12)
+playerFrame.Position = UDim2.new(0.1, 0, y + 0.02, 0)
 playerFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-playerFrame.BackgroundTransparency = 0.2
-playerFrame.BorderSizePixel = 0
+playerFrame.BackgroundTransparency = 0.15
+playerFrame.BorderSizePixel = 1
+playerFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 local pfCorner = Instance.new("UICorner", playerFrame)
 pfCorner.CornerRadius = UDim.new(0, 10)
 
@@ -388,8 +380,6 @@ scroll.BorderSizePixel = 0
 scroll.ScrollBarThickness = 4
 scroll.ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0)
 scroll.ScrollBarImageTransparency = 0.5
-scroll.CanvasSize = UDim2.new(0, 0, 0, #UpdatePlayerList() * 30 + 10)
-scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 
 local layout = Instance.new("UIListLayout", scroll)
 layout.FillDirection = Enum.FillDirection.Vertical
@@ -402,9 +392,17 @@ local function RefreshPlayerList()
             child:Destroy()
         end
     end
-    local items = UpdatePlayerList()
-    scroll.CanvasSize = UDim2.new(0, 0, 0, #items * 30 + 10)
-    for _, item in ipairs(items) do
+    local list = {}
+    for _, p in pairs(game:GetService("Players"):GetPlayers()) do
+        if p ~= player then
+            table.insert(list, p.Name)
+        end
+    end
+    if #list == 0 then
+        table.insert(list, "No players")
+    end
+    scroll.CanvasSize = UDim2.new(0, 0, 0, #list * 30 + 10)
+    for _, item in ipairs(list) do
         local btn = Instance.new("TextButton", scroll)
         btn.Size = UDim2.new(0.9, 0, 0, 25)
         btn.Text = item
@@ -412,7 +410,8 @@ local function RefreshPlayerList()
         btn.TextSize = 13
         btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         btn.BackgroundTransparency = 0.1
-        btn.BorderSizePixel = 0
+        btn.BorderSizePixel = 1
+        btn.BorderColor3 = Color3.fromRGB(0, 0, 0)
         local bCorner = Instance.new("UICorner", btn)
         bCorner.CornerRadius = UDim.new(0, 8)
         btn.MouseButton1Click:Connect(function()
@@ -427,7 +426,7 @@ RefreshPlayerList()
 y = y + 0.16
 
 -- Refresh
-local refreshBtn = MakeBtn(menu, "⟳ Refresh Players", y, function()
+local refBtn = MakeButton(menuFrame, "⟳ Refresh Players", y, function()
     RefreshPlayerList()
     targetPlayer = nil
     targetLabel.Text = "Target: Auto"
@@ -435,7 +434,7 @@ end)
 y = y + 0.07
 
 -- Enable All
-local allBtn = MakeBtn(menu, "Enable All", y, function()
+local allBtn = MakeButton(menuFrame, "Enable All", y, function()
     noclip = true
     infJump = true
     god = true
@@ -457,14 +456,22 @@ end)
 -- Открытие меню
 openBtn.MouseButton1Click:Connect(function()
     menuOpen = not menuOpen
-    menu.Visible = menuOpen
+    menuFrame.Visible = menuOpen
     if menuOpen then
         RefreshPlayerList()
     end
 end)
 
-openBtn.Parent = gui
-menu.Parent = gui
-gui.Parent = player:WaitForChild("PlayerGui")
+-- Родители
+openBtn.Parent = screenGui
+menuFrame.Parent = screenGui
+
+-- Безопасное добавление GUI
+local success, err = pcall(function()
+    screenGui.Parent = game:GetService("CoreGui")
+end)
+if not success then
+    screenGui.Parent = player:WaitForChild("PlayerGui")
+end
 
 print("DrunixHub загружен! Нажми на кнопку DH.")
