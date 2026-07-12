@@ -1,4 +1,4 @@
--- DrunixHub (Универсальный фан-режим)
+-- DrunixHub (Фан-режим с выбором цели)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:FindFirstChild("Humanoid")
@@ -10,11 +10,12 @@ local god = false
 local walkSpeed = 16
 local menuOpen = false
 local selectedPlayer = nil
+local targetPlayer = nil -- цель для Fun Mode
 
--- Фан-режим (работает везде)
+-- Фан-режим
 local funMode = false
 local funModeType = "Circle" -- "Circle", "Follow", "Spin"
-local funSpeed = 2 -- скорость кружения/преследования
+local funSpeed = 20 -- скорость кружения/преследования (1-100)
 local circleAngle = 0
 
 -- GOD MODE
@@ -103,37 +104,50 @@ game:GetService("RunService").Heartbeat:Connect(function()
     if not funMode or not root then return end
     
     if funModeType == "Spin" then
-        -- Крутимся на месте
-        root.CFrame = root.CFrame * CFrame.Angles(0, 0.05 * funSpeed, 0)
+        -- Крутимся на месте (быстро)
+        root.CFrame = root.CFrame * CFrame.Angles(0, 0.1 * (funSpeed / 10), 0)
         return
     end
     
-    -- Поиск ближайшего игрока
-    local closest = nil
-    local closestDist = 30
-    for _, p in pairs(game:GetService("Players"):GetPlayers()) do
-        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-            local dist = (root.Position - p.Character.HumanoidRootPart.Position).Magnitude
-            if dist < closestDist then
-                closestDist = dist
-                closest = p.Character.HumanoidRootPart
+    -- Определяем цель
+    local target = nil
+    if targetPlayer then
+        -- Используем выбранного игрока
+        local plr = game:GetService("Players"):FindFirstChild(targetPlayer)
+        if plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            target = plr.Character.HumanoidRootPart
+        end
+    else
+        -- Ищем ближайшего игрока
+        local closest = nil
+        local closestDist = 50
+        for _, p in pairs(game:GetService("Players"):GetPlayers()) do
+            if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local dist = (root.Position - p.Character.HumanoidRootPart.Position).Magnitude
+                if dist < closestDist then
+                    closestDist = dist
+                    closest = p.Character.HumanoidRootPart
+                end
             end
         end
+        target = closest
     end
     
-    if not closest then return end
+    if not target then return end
     
     if funModeType == "Circle" then
-        -- Кружим вокруг цели
-        circleAngle = circleAngle + 0.03 * funSpeed
-        local radius = 5
+        -- Кружим вокруг цели (близко и резко)
+        local speedFactor = funSpeed / 10 -- 1-100 -> 0.1-10
+        circleAngle = circleAngle + 0.05 * speedFactor
+        local radius = 2 -- близко к игроку
         local offset = Vector3.new(math.cos(circleAngle) * radius, 0, math.sin(circleAngle) * radius)
-        local targetPos = closest.Position + offset
-        root.CFrame = CFrame.new(targetPos, closest.Position)
+        local targetPos = target.Position + offset
+        root.CFrame = CFrame.new(targetPos, target.Position)
     elseif funModeType == "Follow" then
         -- Преследуем цель
-        local direction = (closest.Position - root.Position).Unit
-        root.CFrame = root.CFrame + direction * (0.5 * funSpeed)
+        local speedFactor = funSpeed / 10
+        local direction = (target.Position - root.Position).Unit
+        root.CFrame = root.CFrame + direction * (0.5 * speedFactor)
     end
 end)
 
@@ -194,8 +208,8 @@ end)
 
 -- Меню
 local menu = Instance.new("Frame")
-menu.Size = UDim2.new(0, 360, 0, 580)
-menu.Position = UDim2.new(0.5, -180, 0.5, -290)
+menu.Size = UDim2.new(0, 380, 0, 620)
+menu.Position = UDim2.new(0.5, -190, 0.5, -310)
 menu.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
 menu.BackgroundTransparency = 0
 menu.BorderSizePixel = 3
@@ -231,7 +245,7 @@ end)
 -- NoClip
 local ncBtn = Instance.new("TextButton", menu)
 ncBtn.Size = UDim2.new(0.8, 0, 0, 30)
-ncBtn.Position = UDim2.new(0.1, 0, 0.10, 0)
+ncBtn.Position = UDim2.new(0.1, 0, 0.09, 0)
 ncBtn.Text = "NoClip: OFF"
 ncBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 ncBtn.TextSize = 14
@@ -248,7 +262,7 @@ end)
 -- God Mode
 local godBtn = Instance.new("TextButton", menu)
 godBtn.Size = UDim2.new(0.8, 0, 0, 30)
-godBtn.Position = UDim2.new(0.1, 0, 0.19, 0)
+godBtn.Position = UDim2.new(0.1, 0, 0.17, 0)
 godBtn.Text = "God Mode: OFF"
 godBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 godBtn.TextSize = 14
@@ -265,7 +279,7 @@ end)
 -- Speed
 local speedLabel = Instance.new("TextLabel", menu)
 speedLabel.Size = UDim2.new(0.8, 0, 0, 18)
-speedLabel.Position = UDim2.new(0.1, 0, 0.28, 0)
+speedLabel.Position = UDim2.new(0.1, 0, 0.25, 0)
 speedLabel.Text = "Walk Speed: 16"
 speedLabel.TextColor3 = Color3.fromRGB(200, 150, 150)
 speedLabel.TextSize = 13
@@ -274,7 +288,7 @@ speedLabel.Font = Enum.Font.Gotham
 
 local sliderWalk = Instance.new("Frame", menu)
 sliderWalk.Size = UDim2.new(0.8, 0, 0, 10)
-sliderWalk.Position = UDim2.new(0.1, 0, 0.34, 0)
+sliderWalk.Position = UDim2.new(0.1, 0, 0.31, 0)
 sliderWalk.BackgroundColor3 = Color3.fromRGB(60, 20, 20)
 sliderWalk.BorderSizePixel = 0
 
@@ -327,10 +341,10 @@ SetupSlider(sliderWalk, fillWalk, sliderWalkBtn, speedLabel, 1, 500, function(v)
     if hum then hum.WalkSpeed = v end
 end)
 
--- Фан-режим (универсальный)
+-- Фан-режим
 local funBtn = Instance.new("TextButton", menu)
 funBtn.Size = UDim2.new(0.8, 0, 0, 30)
-funBtn.Position = UDim2.new(0.1, 0, 0.43, 0)
+funBtn.Position = UDim2.new(0.1, 0, 0.40, 0)
 funBtn.Text = "Fun Mode: OFF"
 funBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 funBtn.TextSize = 14
@@ -347,7 +361,7 @@ end)
 -- Режимы Fun Mode
 local modeBtn = Instance.new("TextButton", menu)
 modeBtn.Size = UDim2.new(0.8, 0, 0, 28)
-modeBtn.Position = UDim2.new(0.1, 0, 0.52, 0)
+modeBtn.Position = UDim2.new(0.1, 0, 0.49, 0)
 modeBtn.Text = "Mode: Circle"
 modeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 modeBtn.TextSize = 13
@@ -365,11 +379,75 @@ modeBtn.MouseButton1Click:Connect(function()
     modeBtn.Text = "Mode: " .. funModeType
 end)
 
--- Скорость Fun Mode
+-- Выбор цели для Fun Mode
+local targetLabel = Instance.new("TextLabel", menu)
+targetLabel.Size = UDim2.new(0.8, 0, 0, 18)
+targetLabel.Position = UDim2.new(0.1, 0, 0.58, 0)
+targetLabel.Text = "Target Player:"
+targetLabel.TextColor3 = Color3.fromRGB(200, 150, 150)
+targetLabel.TextSize = 13
+targetLabel.BackgroundTransparency = 1
+targetLabel.Font = Enum.Font.Gotham
+
+local targetDropdown = Instance.new("TextButton", menu)
+targetDropdown.Size = UDim2.new(0.8, 0, 0, 28)
+targetDropdown.Position = UDim2.new(0.1, 0, 0.65, 0)
+targetDropdown.Text = "Auto (nearest)"
+targetDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
+targetDropdown.TextSize = 13
+targetDropdown.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+targetDropdown.BorderSizePixel = 2
+targetDropdown.BorderColor3 = Color3.fromRGB(150, 50, 50)
+
+targetDropdown.MouseButton1Click:Connect(function()
+    local players = {}
+    for _, p in pairs(game:GetService("Players"):GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            table.insert(players, p.Name)
+        end
+    end
+    if #players == 0 then
+        targetDropdown.Text = "No players"
+        return
+    end
+    -- Добавляем опцию "Auto"
+    table.insert(players, 1, "Auto (nearest)")
+    
+    local listFrame = Instance.new("Frame", menu)
+    listFrame.Size = UDim2.new(0.8, 0, 0, #players * 25 + 10)
+    listFrame.Position = UDim2.new(0.1, 0, 0.65, 28)
+    listFrame.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+    listFrame.BorderSizePixel = 2
+    listFrame.BorderColor3 = Color3.fromRGB(150, 50, 50)
+    listFrame.ClipsDescendants = true
+    
+    for i, name in ipairs(players) do
+        local btn = Instance.new("TextButton", listFrame)
+        btn.Size = UDim2.new(1, 0, 0, 25)
+        btn.Position = UDim2.new(0, 0, 0, (i-1)*25)
+        btn.Text = name
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.TextSize = 13
+        btn.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
+        btn.BorderSizePixel = 0
+        btn.MouseButton1Click:Connect(function()
+            if name == "Auto (nearest)" then
+                targetPlayer = nil
+                targetDropdown.Text = "Auto (nearest)"
+            else
+                targetPlayer = name
+                targetDropdown.Text = name
+            end
+            listFrame:Destroy()
+        end)
+    end
+end)
+
+-- Скорость Fun Mode (1-100)
 local funSpeedLabel = Instance.new("TextLabel", menu)
 funSpeedLabel.Size = UDim2.new(0.8, 0, 0, 18)
-funSpeedLabel.Position = UDim2.new(0.1, 0, 0.61, 0)
-funSpeedLabel.Text = "Fun Speed: 2"
+funSpeedLabel.Position = UDim2.new(0.1, 0, 0.74, 0)
+funSpeedLabel.Text = "Fun Speed: 20"
 funSpeedLabel.TextColor3 = Color3.fromRGB(200, 150, 150)
 funSpeedLabel.TextSize = 13
 funSpeedLabel.BackgroundTransparency = 1
@@ -377,7 +455,7 @@ funSpeedLabel.Font = Enum.Font.Gotham
 
 local sliderFun = Instance.new("Frame", menu)
 sliderFun.Size = UDim2.new(0.8, 0, 0, 10)
-sliderFun.Position = UDim2.new(0.1, 0, 0.67, 0)
+sliderFun.Position = UDim2.new(0.1, 0, 0.80, 0)
 sliderFun.BackgroundColor3 = Color3.fromRGB(60, 20, 20)
 sliderFun.BorderSizePixel = 0
 
@@ -396,15 +474,15 @@ sliderFunBtn.Text = ""
 local cornerFun = Instance.new("UICorner", sliderFunBtn)
 cornerFun.CornerRadius = UDim.new(1, 0)
 
-SetupSlider(sliderFun, fillFun, sliderFunBtn, funSpeedLabel, 1, 10, function(v)
+SetupSlider(sliderFun, fillFun, sliderFunBtn, funSpeedLabel, 1, 100, function(v)
     funSpeed = v
 end)
 
 -- Teleport
 local teleportLabel = Instance.new("TextLabel", menu)
 teleportLabel.Size = UDim2.new(0.8, 0, 0, 18)
-teleportLabel.Position = UDim2.new(0.1, 0, 0.76, 0)
-teleportLabel.Text = "Select Player:"
+teleportLabel.Position = UDim2.new(0.1, 0, 0.86, 0)
+teleportLabel.Text = "Teleport to:"
 teleportLabel.TextColor3 = Color3.fromRGB(200, 150, 150)
 teleportLabel.TextSize = 13
 teleportLabel.BackgroundTransparency = 1
@@ -412,7 +490,7 @@ teleportLabel.Font = Enum.Font.Gotham
 
 local teleportDropdown = Instance.new("TextButton", menu)
 teleportDropdown.Size = UDim2.new(0.8, 0, 0, 28)
-teleportDropdown.Position = UDim2.new(0.1, 0, 0.83, 0)
+teleportDropdown.Position = UDim2.new(0.1, 0, 0.92, 0)
 teleportDropdown.Text = "Choose..."
 teleportDropdown.TextColor3 = Color3.fromRGB(255, 255, 255)
 teleportDropdown.TextSize = 13
@@ -433,7 +511,7 @@ teleportDropdown.MouseButton1Click:Connect(function()
     end
     local listFrame = Instance.new("Frame", menu)
     listFrame.Size = UDim2.new(0.8, 0, 0, #players * 25 + 10)
-    listFrame.Position = UDim2.new(0.1, 0, 0.83, 28)
+    listFrame.Position = UDim2.new(0.1, 0, 0.92, 28)
     listFrame.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
     listFrame.BorderSizePixel = 2
     listFrame.BorderColor3 = Color3.fromRGB(150, 50, 50)
@@ -452,67 +530,13 @@ teleportDropdown.MouseButton1Click:Connect(function()
             selectedPlayer = name
             teleportDropdown.Text = name
             listFrame:Destroy()
+            -- Телепортируемся сразу
+            local target = game:GetService("Players"):FindFirstChild(name)
+            if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                root.CFrame = target.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
+            end
         end)
     end
-end)
-
-local teleportBtn = Instance.new("TextButton", menu)
-teleportBtn.Size = UDim2.new(0.8, 0, 0, 28)
-teleportBtn.Position = UDim2.new(0.1, 0, 0.90, 0)
-teleportBtn.Text = "Teleport to Player"
-teleportBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-teleportBtn.TextSize = 13
-teleportBtn.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
-teleportBtn.BorderSizePixel = 2
-teleportBtn.BorderColor3 = Color3.fromRGB(255, 50, 50)
-teleportBtn.MouseButton1Click:Connect(function()
-    if not selectedPlayer then
-        teleportBtn.Text = "Select player first!"
-        task.wait(1)
-        teleportBtn.Text = "Teleport to Player"
-        return
-    end
-    local target = game:GetService("Players"):FindFirstChild(selectedPlayer)
-    if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-        root.CFrame = target.Character.HumanoidRootPart.CFrame + Vector3.new(0, 3, 0)
-        teleportBtn.Text = "Teleported!"
-        task.wait(1)
-        teleportBtn.Text = "Teleport to Player"
-    else
-        teleportBtn.Text = "Player not found!"
-        task.wait(1)
-        teleportBtn.Text = "Teleport to Player"
-    end
-end)
-
-local both = Instance.new("TextButton", menu)
-both.Size = UDim2.new(0.8, 0, 0, 30)
-both.Position = UDim2.new(0.1, 0, 0.96, 0)
-both.Text = "Enable All"
-both.TextColor3 = Color3.fromRGB(255, 255, 255)
-both.TextSize = 14
-both.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
-both.BorderSizePixel = 2
-both.BorderColor3 = Color3.fromRGB(255, 50, 50)
-both.MouseButton1Click:Connect(function()
-    SetNoClip(true)
-    SetInfJump(true)
-    startInfJump()
-    SetGod(true)
-    funMode = true
-    ncBtn.Text = "NoClip: ON"
-    ncBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
-    ncBtn.BorderColor3 = Color3.fromRGB(0, 255, 0)
-    godBtn.Text = "God Mode: ON"
-    godBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
-    godBtn.BorderColor3 = Color3.fromRGB(0, 255, 0)
-    jumpBtn.Text = "Jump ON"
-    statusText.Text = "ON"
-    statusText.TextColor3 = Color3.fromRGB(0, 255, 0)
-    jumpBtn.BorderColor3 = Color3.fromRGB(0, 255, 0)
-    funBtn.Text = "Fun Mode: ON"
-    funBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
-    funBtn.BorderColor3 = Color3.fromRGB(0, 255, 0)
 end)
 
 openBtn.MouseButton1Click:Connect(function()
