@@ -1,4 +1,4 @@
--- DrunixHub (2 окна, оба перетаскиваемые, InfJump исправлен)
+-- DrunixHub (Оба окна перетаскиваемые + InfJump исправлен)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:FindFirstChild("Humanoid")
@@ -87,9 +87,6 @@ game:GetService("RunService").Heartbeat:Connect(function()
     end
 end)
 
--- Убираем автоматический прыжок из цикла!
--- Теперь InfJump работает только через StateChanged
-
 -- Фан-режим
 game:GetService("RunService").Heartbeat:Connect(function()
     if not funMode or not root then return end
@@ -162,45 +159,57 @@ openBtn.Active = true
 local openCorner = Instance.new("UICorner", openBtn)
 openCorner.CornerRadius = UDim.new(1, 0)
 
+-- Функция создания перетаскиваемого окна
+local function CreateDraggableWindow(title, size, position)
+    local frame = Instance.new("Frame")
+    frame.Size = size
+    frame.Position = position
+    frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    frame.BackgroundTransparency = 0.1
+    frame.BorderSizePixel = 2
+    frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    frame.Visible = false
+    frame.Active = true
+    local corner = Instance.new("UICorner", frame)
+    corner.CornerRadius = UDim.new(0, 15)
+    
+    -- Заголовок (перетаскиваемый)
+    local titleBar = Instance.new("TextLabel", frame)
+    titleBar.Size = UDim2.new(1, 0, 0, 30)
+    titleBar.Position = UDim2.new(0, 0, 0, 0)
+    titleBar.Text = title
+    titleBar.TextColor3 = Color3.fromRGB(0, 0, 0)
+    titleBar.TextSize = 18
+    titleBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    titleBar.BackgroundTransparency = 0.2
+    titleBar.Font = Enum.Font.GothamBold
+    local titleCorner = Instance.new("UICorner", titleBar)
+    titleCorner.CornerRadius = UDim.new(0, 15)
+    titleBar.Active = true
+    titleBar.Draggable = true
+    
+    -- Кнопка закрытия
+    local closeBtn = Instance.new("TextButton", frame)
+    closeBtn.Size = UDim2.new(0, 30, 0, 30)
+    closeBtn.Position = UDim2.new(1, -35, 0, 0)
+    closeBtn.Text = "✕"
+    closeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+    closeBtn.TextSize = 18
+    closeBtn.BackgroundTransparency = 1
+    closeBtn.Font = Enum.Font.GothamBold
+    
+    return frame, titleBar, closeBtn
+end
+
 -- ============================================
 -- ОКНО ФУНКЦИЙ (перетаскиваемое)
 -- ============================================
-local funcFrame = Instance.new("Frame")
-funcFrame.Size = UDim2.new(0, 250, 0, 380)
-funcFrame.Position = UDim2.new(0.2, 0, 0.5, -190)
-funcFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-funcFrame.BackgroundTransparency = 0.1
-funcFrame.BorderSizePixel = 2
-funcFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
-funcFrame.Visible = false
-funcFrame.Active = true
-local funcCorner = Instance.new("UICorner", funcFrame)
-funcCorner.CornerRadius = UDim.new(0, 15)
+local funcFrame, funcTitle, funcClose = CreateDraggableWindow(
+    "⚙️ Functions",
+    UDim2.new(0, 250, 0, 380),
+    UDim2.new(0.15, 0, 0.5, -190)
+)
 
--- Заголовок (перетаскиваемый)
-local funcTitle = Instance.new("TextLabel", funcFrame)
-funcTitle.Size = UDim2.new(1, 0, 0, 30)
-funcTitle.Position = UDim2.new(0, 0, 0, 0)
-funcTitle.Text = "⚙️ Functions"
-funcTitle.TextColor3 = Color3.fromRGB(0, 0, 0)
-funcTitle.TextSize = 18
-funcTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-funcTitle.BackgroundTransparency = 0.2
-funcTitle.Font = Enum.Font.GothamBold
-local funcTitleCorner = Instance.new("UICorner", funcTitle)
-funcTitleCorner.CornerRadius = UDim.new(0, 15)
-funcTitle.Active = true
-funcTitle.Draggable = true
-
--- Кнопка закрытия
-local funcClose = Instance.new("TextButton", funcFrame)
-funcClose.Size = UDim2.new(0, 30, 0, 30)
-funcClose.Position = UDim2.new(1, -35, 0, 0)
-funcClose.Text = "✕"
-funcClose.TextColor3 = Color3.fromRGB(0, 0, 0)
-funcClose.TextSize = 18
-funcClose.BackgroundTransparency = 1
-funcClose.Font = Enum.Font.GothamBold
 funcClose.MouseButton1Click:Connect(function()
     funcFrame.Visible = false
     playerFrame.Visible = false
@@ -369,41 +378,12 @@ end)
 -- ============================================
 -- ОКНО ИГРОКОВ (перетаскиваемое)
 -- ============================================
-local playerFrame = Instance.new("Frame")
-playerFrame.Size = UDim2.new(0, 200, 0, 300)
-playerFrame.Position = UDim2.new(0.6, 0, 0.5, -150)
-playerFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-playerFrame.BackgroundTransparency = 0.1
-playerFrame.BorderSizePixel = 2
-playerFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
-playerFrame.Visible = false
-playerFrame.Active = true
-local playerCorner = Instance.new("UICorner", playerFrame)
-playerCorner.CornerRadius = UDim.new(0, 15)
+local playerFrame, playerTitle, playerClose = CreateDraggableWindow(
+    "👥 Players",
+    UDim2.new(0, 200, 0, 300),
+    UDim2.new(0.6, 0, 0.5, -150)
+)
 
--- Заголовок (перетаскиваемый)
-local playerTitle = Instance.new("TextLabel", playerFrame)
-playerTitle.Size = UDim2.new(1, 0, 0, 30)
-playerTitle.Position = UDim2.new(0, 0, 0, 0)
-playerTitle.Text = "👥 Players"
-playerTitle.TextColor3 = Color3.fromRGB(0, 0, 0)
-playerTitle.TextSize = 18
-playerTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-playerTitle.BackgroundTransparency = 0.2
-playerTitle.Font = Enum.Font.GothamBold
-local playerTitleCorner = Instance.new("UICorner", playerTitle)
-playerTitleCorner.CornerRadius = UDim.new(0, 15)
-playerTitle.Active = true
-playerTitle.Draggable = true
-
-local playerClose = Instance.new("TextButton", playerFrame)
-playerClose.Size = UDim2.new(0, 30, 0, 30)
-playerClose.Position = UDim2.new(1, -35, 0, 0)
-playerClose.Text = "✕"
-playerClose.TextColor3 = Color3.fromRGB(0, 0, 0)
-playerClose.TextSize = 18
-playerClose.BackgroundTransparency = 1
-playerClose.Font = Enum.Font.GothamBold
 playerClose.MouseButton1Click:Connect(function()
     playerFrame.Visible = false
     funcFrame.Visible = false
