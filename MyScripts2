@@ -1,4 +1,4 @@
--- DrunixHub (Стеклянное меню, белый вход "DH", чёрный текст в меню)
+-- DrunixHub (Исправленное обновление кнопок и списка игроков)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:FindFirstChild("Humanoid")
@@ -148,7 +148,7 @@ local gui = Instance.new("ScreenGui")
 gui.Name = "DrunixHub"
 gui.ResetOnSpawn = false
 
--- Кнопка входа (белая, с надписью "DH")
+-- Кнопка входа "DH"
 local openBtn = Instance.new("TextButton")
 openBtn.Size = UDim2.new(0, 70, 0, 70)
 openBtn.Position = UDim2.new(0.5, -35, 0.5, -35)
@@ -166,8 +166,8 @@ corner.CornerRadius = UDim.new(1, 0)
 
 -- Стеклянное меню
 local menu = Instance.new("Frame")
-menu.Size = UDim2.new(0, 380, 0, 600)
-menu.Position = UDim2.new(0.5, -190, 0.5, -300)
+menu.Size = UDim2.new(0, 380, 0, 620)
+menu.Position = UDim2.new(0.5, -190, 0.5, -310)
 menu.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 menu.BackgroundTransparency = 0.15
 menu.BorderSizePixel = 0
@@ -185,7 +185,7 @@ local function toggleBlur(on)
     blur.Size = on and 15 or 0
 end
 
--- Заголовок (белый)
+-- Заголовок
 local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0, 50)
 title.Position = UDim2.new(0, 0, 0, 0)
@@ -195,7 +195,7 @@ title.TextSize = 28
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.GothamBold
 
--- Закрыть (белый)
+-- Закрыть
 local close = Instance.new("TextButton", menu)
 close.Size = UDim2.new(0, 40, 0, 40)
 close.Position = UDim2.new(1, -45, 0, 5)
@@ -210,7 +210,7 @@ close.MouseButton1Click:Connect(function()
     toggleBlur(false)
 end)
 
--- Функция создания кнопки (текст чёрный)
+-- Функция создания кнопки
 local function CreateButton(parent, text, posY, callback)
     local btn = Instance.new("TextButton", parent)
     btn.Size = UDim2.new(0.8, 0, 0, 35)
@@ -227,18 +227,42 @@ local function CreateButton(parent, text, posY, callback)
     return btn
 end
 
--- Функция для создания ScrollingFrame (список игроков)
-local function CreateScrollingList(parent, pos, width, height, items, onSelect)
-    local frame = Instance.new("Frame", parent)
-    frame.Size = UDim2.new(width, 0, height, 0)
-    frame.Position = pos
-    frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    frame.BackgroundTransparency = 0.1
-    frame.BorderSizePixel = 0
-    local frameCorner = Instance.new("UICorner", frame)
+-- Функция обновления списка игроков
+local function GetPlayerList()
+    local list = {}
+    for _, p in pairs(game:GetService("Players"):GetPlayers()) do
+        if p ~= player then
+            table.insert(list, p.Name)
+        end
+    end
+    if #list == 0 then
+        table.insert(list, "No players")
+    end
+    return list
+end
+
+-- Переменные для списка игроков
+local playerListFrame = nil
+local targetLabel = nil
+
+-- Функция создания/обновления списка
+local function UpdatePlayerList()
+    if playerListFrame then
+        playerListFrame:Destroy()
+        playerListFrame = nil
+    end
+    
+    local items = GetPlayerList()
+    playerListFrame = Instance.new("Frame", menu)
+    playerListFrame.Size = UDim2.new(0.8, 0, 0, 0.12)
+    playerListFrame.Position = UDim2.new(0.1, 0, 0.76, 0)
+    playerListFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    playerListFrame.BackgroundTransparency = 0.1
+    playerListFrame.BorderSizePixel = 0
+    local frameCorner = Instance.new("UICorner", playerListFrame)
     frameCorner.CornerRadius = UDim.new(0, 15)
     
-    local scroll = Instance.new("ScrollingFrame", frame)
+    local scroll = Instance.new("ScrollingFrame", playerListFrame)
     scroll.Size = UDim2.new(1, 0, 1, 0)
     scroll.BackgroundTransparency = 1
     scroll.BorderSizePixel = 0
@@ -265,25 +289,13 @@ local function CreateScrollingList(parent, pos, width, height, items, onSelect)
         local btnCorner = Instance.new("UICorner", btn)
         btnCorner.CornerRadius = UDim.new(0, 10)
         btn.MouseButton1Click:Connect(function()
-            onSelect(item)
+            if item == "No players" then return end
+            targetPlayer = item
+            if targetLabel then
+                targetLabel.Text = "Target: " .. item
+            end
         end)
     end
-    
-    return frame
-end
-
--- Получить список игроков
-local function GetPlayerList()
-    local list = {}
-    for _, p in pairs(game:GetService("Players"):GetPlayers()) do
-        if p ~= player then
-            table.insert(list, p.Name)
-        end
-    end
-    if #list == 0 then
-        table.insert(list, "No players")
-    end
-    return list
 end
 
 -- Элементы меню
@@ -291,7 +303,8 @@ local yPos = 0.06
 
 -- NoClip
 local ncBtn = CreateButton(menu, "NoClip: OFF", yPos, function()
-    SetNoClip(not noclip)
+    noclip = not noclip
+    SetNoClip(noclip)
     ncBtn.Text = noclip and "NoClip: ON" or "NoClip: OFF"
     ncBtn.TextColor3 = noclip and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
 end)
@@ -299,7 +312,8 @@ yPos = yPos + 0.07
 
 -- Infinite Jump
 local jumpBtn = CreateButton(menu, "InfJump: OFF", yPos, function()
-    SetInfJump(not infJump)
+    infJump = not infJump
+    SetInfJump(infJump)
     if infJump then startInfJump() end
     jumpBtn.Text = infJump and "InfJump: ON" or "InfJump: OFF"
     jumpBtn.TextColor3 = infJump and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
@@ -308,13 +322,14 @@ yPos = yPos + 0.07
 
 -- God Mode
 local godBtn = CreateButton(menu, "God Mode: OFF", yPos, function()
-    SetGod(not god)
+    god = not god
+    SetGod(god)
     godBtn.Text = god and "God Mode: ON" or "God Mode: OFF"
     godBtn.TextColor3 = god and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
 end)
 yPos = yPos + 0.07
 
--- Speed (текст чёрный)
+-- Speed
 local speedLabel = Instance.new("TextLabel", menu)
 speedLabel.Size = UDim2.new(0.8, 0, 0, 20)
 speedLabel.Position = UDim2.new(0.1, 0, yPos, 0)
@@ -405,7 +420,7 @@ local modeBtn = CreateButton(menu, "Mode: Circle", yPos, function()
 end)
 yPos = yPos + 0.07
 
--- Fun Speed (текст чёрный)
+-- Fun Speed
 local funSpeedLabel = Instance.new("TextLabel", menu)
 funSpeedLabel.Size = UDim2.new(0.8, 0, 0, 20)
 funSpeedLabel.Position = UDim2.new(0.1, 0, yPos, 0)
@@ -445,7 +460,7 @@ end)
 yPos = yPos + 0.055
 
 -- Target (текст чёрный)
-local targetLabel = Instance.new("TextLabel", menu)
+targetLabel = Instance.new("TextLabel", menu)
 targetLabel.Size = UDim2.new(0.8, 0, 0, 20)
 targetLabel.Position = UDim2.new(0.1, 0, yPos, 0)
 targetLabel.Text = "Target: Auto"
@@ -455,20 +470,28 @@ targetLabel.BackgroundTransparency = 1
 targetLabel.Font = Enum.Font.Gotham
 yPos = yPos + 0.04
 
-local playerListFrame = CreateScrollingList(menu, UDim2.new(0.1, 0, yPos, 0), 0.8, 0.12, GetPlayerList(), function(name)
-    if name == "No players" then return end
-    targetPlayer = name
-    targetLabel.Text = "Target: " .. name
-end)
+-- Создаём список игроков
+UpdatePlayerList()
 yPos = yPos + 0.14
+
+-- Кнопка обновления списка
+local refreshBtn = CreateButton(menu, "⟳ Refresh Players", yPos, function()
+    UpdatePlayerList()
+    targetLabel.Text = "Target: Auto"
+    targetPlayer = nil
+end)
+yPos = yPos + 0.07
 
 -- Enable All
 local both = CreateButton(menu, "Enable All", yPos, function()
+    noclip = true
+    infJump = true
+    god = true
+    funMode = true
     SetNoClip(true)
     SetInfJump(true)
     startInfJump()
     SetGod(true)
-    funMode = true
     ncBtn.Text = "NoClip: ON"
     ncBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
     jumpBtn.Text = "InfJump: ON"
@@ -484,6 +507,9 @@ end)
 openBtn.MouseButton1Click:Connect(function()
     menuOpen = not menuOpen
     menu.Visible = menuOpen
+    if menuOpen then
+        UpdatePlayerList() -- обновляем список при открытии
+    end
     toggleBlur(menuOpen and funMode)
 end)
 
