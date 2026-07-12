@@ -1,4 +1,4 @@
--- DrunixHub (Исправленное меню, кнопки работают)
+-- DrunixHub (Понятное меню с группами + работающие кнопки)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:FindFirstChild("Humanoid")
@@ -164,10 +164,10 @@ openBtn.Active = true
 local openCorner = Instance.new("UICorner", openBtn)
 openCorner.CornerRadius = UDim.new(1, 0)
 
--- Меню (БЕЗ DRAGGABLE, чтобы кнопки работали)
+-- Меню
 local menuFrame = Instance.new("Frame")
-menuFrame.Size = UDim2.new(0, 340, 0, 480)
-menuFrame.Position = UDim2.new(0.5, -170, 0.5, -240)
+menuFrame.Size = UDim2.new(0, 350, 0, 520)
+menuFrame.Position = UDim2.new(0.5, -175, 0.5, -260)
 menuFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 menuFrame.BackgroundTransparency = 0.1
 menuFrame.BorderSizePixel = 2
@@ -177,9 +177,9 @@ menuFrame.Active = true
 local menuCorner = Instance.new("UICorner", menuFrame)
 menuCorner.CornerRadius = UDim.new(0, 20)
 
--- Полоса для перетаскивания (чтобы можно было двигать меню)
+-- Полоса для перетаскивания
 local dragBar = Instance.new("Frame", menuFrame)
-dragBar.Size = UDim2.new(1, 0, 0, 30)
+dragBar.Size = UDim2.new(1, 0, 0, 35)
 dragBar.Position = UDim2.new(0, 0, 0, 0)
 dragBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 dragBar.BackgroundTransparency = 0.3
@@ -189,23 +189,21 @@ dragBar.Draggable = true
 local dragCorner = Instance.new("UICorner", dragBar)
 dragCorner.CornerRadius = UDim.new(0, 20)
 
--- Заголовок (белый)
 local title = Instance.new("TextLabel", dragBar)
-title.Size = UDim2.new(1, 0, 0, 30)
+title.Size = UDim2.new(1, 0, 0, 35)
 title.Position = UDim2.new(0, 0, 0, 0)
 title.Text = "Drunix Hub"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.TextSize = 22
+title.TextSize = 24
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.GothamBold
 
--- Кнопка закрытия
 local closeBtn = Instance.new("TextButton", dragBar)
-closeBtn.Size = UDim2.new(0, 30, 0, 30)
-closeBtn.Position = UDim2.new(1, -35, 0, 0)
+closeBtn.Size = UDim2.new(0, 35, 0, 35)
+closeBtn.Position = UDim2.new(1, -40, 0, 0)
 closeBtn.Text = "✕"
 closeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-closeBtn.TextSize = 18
+closeBtn.TextSize = 20
 closeBtn.BackgroundTransparency = 1
 closeBtn.Font = Enum.Font.GothamBold
 closeBtn.MouseButton1Click:Connect(function()
@@ -213,10 +211,23 @@ closeBtn.MouseButton1Click:Connect(function()
     menuFrame.Visible = false
 end)
 
--- Функция создания кнопки
+-- Группы (заголовки)
+local function MakeGroup(parent, text, yPos)
+    local lbl = Instance.new("TextLabel", parent)
+    lbl.Size = UDim2.new(0.8, 0, 0, 20)
+    lbl.Position = UDim2.new(0.1, 0, yPos, 0)
+    lbl.Text = text
+    lbl.TextColor3 = Color3.fromRGB(0, 0, 0)
+    lbl.TextSize = 14
+    lbl.Font = Enum.Font.GothamBold
+    lbl.BackgroundTransparency = 1
+    return lbl
+end
+
+-- Функция создания кнопки (с обновлением текста)
 local function MakeButton(parent, text, yPos, callback)
     local btn = Instance.new("TextButton", parent)
-    btn.Size = UDim2.new(0.8, 0, 0, 32)
+    btn.Size = UDim2.new(0.8, 0, 0, 30)
     btn.Position = UDim2.new(0.1, 0, yPos, 0)
     btn.Text = text
     btn.TextColor3 = Color3.fromRGB(0, 0, 0)
@@ -227,7 +238,9 @@ local function MakeButton(parent, text, yPos, callback)
     btn.BorderColor3 = Color3.fromRGB(0, 0, 0)
     local c = Instance.new("UICorner", btn)
     c.CornerRadius = UDim.new(0, 10)
-    btn.MouseButton1Click:Connect(callback)
+    btn.MouseButton1Click:Connect(function()
+        callback(btn)
+    end)
     return btn
 end
 
@@ -298,33 +311,37 @@ local function MakeSlider(parent, labelText, yPos, minVal, maxVal, defaultVal, c
 end
 
 -- Создание элементов меню
-local y = 0.08
+local y = 0.09
+
+-- Группа "Основное"
+MakeGroup(menuFrame, "── Основное ──", y)
+y = y + 0.05
 
 -- NoClip
-local ncBtn = MakeButton(menuFrame, "NoClip: OFF", y, function()
+local ncBtn = MakeButton(menuFrame, "NoClip: OFF", y, function(btn)
     noclip = not noclip
     SetNoClip(noclip)
-    ncBtn.Text = noclip and "NoClip: ON" or "NoClip: OFF"
-    ncBtn.TextColor3 = noclip and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
+    btn.Text = noclip and "NoClip: ON" or "NoClip: OFF"
+    btn.TextColor3 = noclip and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
 end)
 y = y + 0.07
 
 -- InfJump
-local ijBtn = MakeButton(menuFrame, "InfJump: OFF", y, function()
+local ijBtn = MakeButton(menuFrame, "InfJump: OFF", y, function(btn)
     infJump = not infJump
     SetInfJump(infJump)
     if infJump then startInfJump() end
-    ijBtn.Text = infJump and "InfJump: ON" or "InfJump: OFF"
-    ijBtn.TextColor3 = infJump and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
+    btn.Text = infJump and "InfJump: ON" or "InfJump: OFF"
+    btn.TextColor3 = infJump and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
 end)
 y = y + 0.07
 
 -- God Mode
-local godBtn = MakeButton(menuFrame, "God Mode: OFF", y, function()
+local godBtn = MakeButton(menuFrame, "God Mode: OFF", y, function(btn)
     god = not god
     SetGod(god)
-    godBtn.Text = god and "God Mode: ON" or "God Mode: OFF"
-    godBtn.TextColor3 = god and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
+    btn.Text = god and "God Mode: ON" or "God Mode: OFF"
+    btn.TextColor3 = god and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
 end)
 y = y + 0.07
 
@@ -335,16 +352,20 @@ MakeSlider(menuFrame, "Walk Speed", y, 1, 500, 16, function(v)
 end)
 y = y + 0.09
 
+-- Группа "Fun Mode"
+MakeGroup(menuFrame, "── Fun Mode ──", y)
+y = y + 0.05
+
 -- Fun Mode
-local funBtn = MakeButton(menuFrame, "Fun Mode: OFF", y, function()
+local funBtn = MakeButton(menuFrame, "Fun Mode: OFF", y, function(btn)
     funMode = not funMode
-    funBtn.Text = funMode and "Fun Mode: ON" or "Fun Mode: OFF"
-    funBtn.TextColor3 = funMode and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
+    btn.Text = funMode and "Fun Mode: ON" or "Fun Mode: OFF"
+    btn.TextColor3 = funMode and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
 end)
 y = y + 0.07
 
 -- Mode
-local modeBtn = MakeButton(menuFrame, "Mode: Circle", y, function()
+local modeBtn = MakeButton(menuFrame, "Mode: Circle", y, function(btn)
     local modes = {"Circle", "Follow", "Spin"}
     local current = 1
     for i, v in ipairs(modes) do
@@ -352,7 +373,7 @@ local modeBtn = MakeButton(menuFrame, "Mode: Circle", y, function()
     end
     current = current % 3 + 1
     funModeType = modes[current]
-    modeBtn.Text = "Mode: " .. funModeType
+    btn.Text = "Mode: " .. funModeType
 end)
 y = y + 0.07
 
@@ -362,7 +383,7 @@ MakeSlider(menuFrame, "Fun Speed", y, 1, 100, 20, function(v)
 end)
 y = y + 0.09
 
--- Target Label
+-- Target
 local targetLabel = Instance.new("TextLabel", menuFrame)
 targetLabel.Size = UDim2.new(0.8, 0, 0, 18)
 targetLabel.Position = UDim2.new(0.1, 0, y, 0)
@@ -375,7 +396,7 @@ y = y + 0.04
 
 -- Список игроков
 local playerFrame = Instance.new("Frame", menuFrame)
-playerFrame.Size = UDim2.new(0.8, 0, 0, 0.12)
+playerFrame.Size = UDim2.new(0.8, 0, 0, 0.1)
 playerFrame.Position = UDim2.new(0.1, 0, y + 0.02, 0)
 playerFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 playerFrame.BackgroundTransparency = 0.15
@@ -434,10 +455,10 @@ local function RefreshPlayerList()
 end
 
 RefreshPlayerList()
-y = y + 0.16
+y = y + 0.14
 
 -- Refresh
-local refBtn = MakeButton(menuFrame, "⟳ Refresh Players", y, function()
+local refBtn = MakeButton(menuFrame, "⟳ Refresh Players", y, function(btn)
     RefreshPlayerList()
     targetPlayer = nil
     targetLabel.Text = "Target: Auto"
@@ -445,7 +466,7 @@ end)
 y = y + 0.07
 
 -- Enable All
-local allBtn = MakeButton(menuFrame, "Enable All", y, function()
+local allBtn = MakeButton(menuFrame, "Enable All", y, function(btn)
     noclip = true
     infJump = true
     god = true
