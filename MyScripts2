@@ -1,4 +1,4 @@
--- DrunixHub (Исправленное меню + чёрная обводка)
+-- DrunixHub (Исправленное меню, кнопки работают)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:FindFirstChild("Humanoid")
@@ -164,7 +164,7 @@ openBtn.Active = true
 local openCorner = Instance.new("UICorner", openBtn)
 openCorner.CornerRadius = UDim.new(1, 0)
 
--- Меню (с чёрной обводкой)
+-- Меню (БЕЗ DRAGGABLE, чтобы кнопки работали)
 local menuFrame = Instance.new("Frame")
 menuFrame.Size = UDim2.new(0, 340, 0, 480)
 menuFrame.Position = UDim2.new(0.5, -170, 0.5, -240)
@@ -174,27 +174,38 @@ menuFrame.BorderSizePixel = 2
 menuFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 menuFrame.Visible = false
 menuFrame.Active = true
-menuFrame.Draggable = true
 local menuCorner = Instance.new("UICorner", menuFrame)
 menuCorner.CornerRadius = UDim.new(0, 20)
 
+-- Полоса для перетаскивания (чтобы можно было двигать меню)
+local dragBar = Instance.new("Frame", menuFrame)
+dragBar.Size = UDim2.new(1, 0, 0, 30)
+dragBar.Position = UDim2.new(0, 0, 0, 0)
+dragBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+dragBar.BackgroundTransparency = 0.3
+dragBar.BorderSizePixel = 0
+dragBar.Active = true
+dragBar.Draggable = true
+local dragCorner = Instance.new("UICorner", dragBar)
+dragCorner.CornerRadius = UDim.new(0, 20)
+
 -- Заголовок (белый)
-local title = Instance.new("TextLabel", menuFrame)
-title.Size = UDim2.new(1, 0, 0, 45)
+local title = Instance.new("TextLabel", dragBar)
+title.Size = UDim2.new(1, 0, 0, 30)
 title.Position = UDim2.new(0, 0, 0, 0)
 title.Text = "Drunix Hub"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.TextSize = 28
+title.TextSize = 22
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.GothamBold
 
 -- Кнопка закрытия
-local closeBtn = Instance.new("TextButton", menuFrame)
-closeBtn.Size = UDim2.new(0, 35, 0, 35)
-closeBtn.Position = UDim2.new(1, -40, 0, 5)
+local closeBtn = Instance.new("TextButton", dragBar)
+closeBtn.Size = UDim2.new(0, 30, 0, 30)
+closeBtn.Position = UDim2.new(1, -35, 0, 0)
 closeBtn.Text = "✕"
 closeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-closeBtn.TextSize = 22
+closeBtn.TextSize = 18
 closeBtn.BackgroundTransparency = 1
 closeBtn.Font = Enum.Font.GothamBold
 closeBtn.MouseButton1Click:Connect(function()
@@ -202,7 +213,7 @@ closeBtn.MouseButton1Click:Connect(function()
     menuFrame.Visible = false
 end)
 
--- Функция создания кнопки (с чёрной обводкой)
+-- Функция создания кнопки
 local function MakeButton(parent, text, yPos, callback)
     local btn = Instance.new("TextButton", parent)
     btn.Size = UDim2.new(0.8, 0, 0, 32)
@@ -220,7 +231,7 @@ local function MakeButton(parent, text, yPos, callback)
     return btn
 end
 
--- Функция создания ползунка (с чёрной обводкой)
+-- Функция создания ползунка
 local function MakeSlider(parent, labelText, yPos, minVal, maxVal, defaultVal, callback)
     local label = Instance.new("TextLabel", parent)
     label.Size = UDim2.new(0.8, 0, 0, 18)
@@ -362,7 +373,7 @@ targetLabel.BackgroundTransparency = 1
 targetLabel.Font = Enum.Font.Gotham
 y = y + 0.04
 
--- Список игроков (с чёрной обводкой)
+-- Список игроков
 local playerFrame = Instance.new("Frame", menuFrame)
 playerFrame.Size = UDim2.new(0.8, 0, 0, 0.12)
 playerFrame.Position = UDim2.new(0.1, 0, y + 0.02, 0)
