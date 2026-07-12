@@ -1,4 +1,4 @@
--- DrunixHub (Понятное меню с группами + работающие кнопки)
+-- DrunixHub (Исправленный Infinite Jump)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:FindFirstChild("Humanoid")
@@ -30,6 +30,7 @@ local function SetGod(state)
     end
 end
 
+-- ИСПРАВЛЕННЫЙ INFINITE JUMP (без автоматического взлёта)
 local jumpCon
 local function SetInfJump(state)
     infJump = state
@@ -87,14 +88,15 @@ game:GetService("RunService").Heartbeat:Connect(function()
     end
 end)
 
-game:GetService("RunService").Heartbeat:Connect(function()
-    if infJump and hum then
-        local state = hum:GetState()
-        if state == Enum.HumanoidStateType.Landed or state == Enum.HumanoidStateType.Freefall then
-            hum:ChangeState(Enum.HumanoidStateType.Jumping)
-        end
-    end
-end)
+-- Убираем автоматический прыжок из цикла! (теперь только через StateChanged)
+-- game:GetService("RunService").Heartbeat:Connect(function()
+--     if infJump and hum then
+--         local state = hum:GetState()
+--         if state == Enum.HumanoidStateType.Landed or state == Enum.HumanoidStateType.Freefall then
+--             hum:ChangeState(Enum.HumanoidStateType.Jumping)
+--         end
+--     end
+-- end)
 
 -- Фан-режим
 game:GetService("RunService").Heartbeat:Connect(function()
@@ -147,14 +149,13 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "DrunixHub"
 screenGui.ResetOnSpawn = false
 
--- Кнопка входа "DH"
+-- Кнопка входа "DH" (без обводки)
 local openBtn = Instance.new("TextButton")
 openBtn.Size = UDim2.new(0, 70, 0, 70)
 openBtn.Position = UDim2.new(0.5, -35, 0.5, -35)
 openBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 openBtn.BackgroundTransparency = 0
-openBtn.BorderSizePixel = 2
-openBtn.BorderColor3 = Color3.fromRGB(0, 0, 0)
+openBtn.BorderSizePixel = 0
 openBtn.Text = "DH"
 openBtn.TextColor3 = Color3.fromRGB(180, 0, 0)
 openBtn.TextSize = 30
@@ -189,6 +190,7 @@ dragBar.Draggable = true
 local dragCorner = Instance.new("UICorner", dragBar)
 dragCorner.CornerRadius = UDim.new(0, 20)
 
+-- Заголовок (белый, без обводки)
 local title = Instance.new("TextLabel", dragBar)
 title.Size = UDim2.new(1, 0, 0, 35)
 title.Position = UDim2.new(0, 0, 0, 0)
@@ -198,6 +200,7 @@ title.TextSize = 24
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.GothamBold
 
+-- Кнопка закрытия
 local closeBtn = Instance.new("TextButton", dragBar)
 closeBtn.Size = UDim2.new(0, 35, 0, 35)
 closeBtn.Position = UDim2.new(1, -40, 0, 0)
@@ -224,7 +227,7 @@ local function MakeGroup(parent, text, yPos)
     return lbl
 end
 
--- Функция создания кнопки (с обновлением текста)
+-- Функция создания кнопки
 local function MakeButton(parent, text, yPos, callback)
     local btn = Instance.new("TextButton", parent)
     btn.Size = UDim2.new(0.8, 0, 0, 30)
@@ -326,7 +329,7 @@ local ncBtn = MakeButton(menuFrame, "NoClip: OFF", y, function(btn)
 end)
 y = y + 0.07
 
--- InfJump
+-- InfJump (исправленный)
 local ijBtn = MakeButton(menuFrame, "InfJump: OFF", y, function(btn)
     infJump = not infJump
     SetInfJump(infJump)
