@@ -1,4 +1,4 @@
--- DrunixHub (Исправленное обновление кнопок и списка игроков)
+-- DrunixHub (Исправленное обновление кнопок)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:FindFirstChild("Humanoid")
@@ -210,8 +210,8 @@ close.MouseButton1Click:Connect(function()
     toggleBlur(false)
 end)
 
--- Функция создания кнопки
-local function CreateButton(parent, text, posY, callback)
+-- Функция создания кнопки с автообновлением
+local function CreateToggleButton(parent, text, posY, getState, setState, onText, offText)
     local btn = Instance.new("TextButton", parent)
     btn.Size = UDim2.new(0.8, 0, 0, 35)
     btn.Position = UDim2.new(0.1, 0, posY, 0)
@@ -223,11 +223,23 @@ local function CreateButton(parent, text, posY, callback)
     btn.BorderSizePixel = 0
     local btnCorner = Instance.new("UICorner", btn)
     btnCorner.CornerRadius = UDim.new(0, 12)
-    btn.MouseButton1Click:Connect(callback)
+    
+    local function update()
+        local state = getState()
+        btn.Text = state and onText or offText
+        btn.TextColor3 = state and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
+    end
+    
+    btn.MouseButton1Click:Connect(function()
+        setState(not getState())
+        update()
+    end)
+    
+    update()
     return btn
 end
 
--- Функция обновления списка игроков
+-- Функция создания списка игроков
 local function GetPlayerList()
     local list = {}
     for _, p in pairs(game:GetService("Players"):GetPlayers()) do
@@ -241,11 +253,9 @@ local function GetPlayerList()
     return list
 end
 
--- Переменные для списка игроков
 local playerListFrame = nil
 local targetLabel = nil
 
--- Функция создания/обновления списка
 local function UpdatePlayerList()
     if playerListFrame then
         playerListFrame:Destroy()
@@ -302,31 +312,31 @@ end
 local yPos = 0.06
 
 -- NoClip
-local ncBtn = CreateButton(menu, "NoClip: OFF", yPos, function()
-    noclip = not noclip
-    SetNoClip(noclip)
-    ncBtn.Text = noclip and "NoClip: ON" or "NoClip: OFF"
-    ncBtn.TextColor3 = noclip and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
-end)
+local ncBtn = CreateToggleButton(menu, "NoClip: OFF", yPos, 
+    function() return noclip end,
+    function(state) noclip = state; SetNoClip(state) end,
+    "NoClip: ON", "NoClip: OFF"
+)
 yPos = yPos + 0.07
 
 -- Infinite Jump
-local jumpBtn = CreateButton(menu, "InfJump: OFF", yPos, function()
-    infJump = not infJump
-    SetInfJump(infJump)
-    if infJump then startInfJump() end
-    jumpBtn.Text = infJump and "InfJump: ON" or "InfJump: OFF"
-    jumpBtn.TextColor3 = infJump and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
-end)
+local jumpBtn = CreateToggleButton(menu, "InfJump: OFF", yPos,
+    function() return infJump end,
+    function(state) 
+        infJump = state
+        SetInfJump(state)
+        if state then startInfJump() end
+    end,
+    "InfJump: ON", "InfJump: OFF"
+)
 yPos = yPos + 0.07
 
 -- God Mode
-local godBtn = CreateButton(menu, "God Mode: OFF", yPos, function()
-    god = not god
-    SetGod(god)
-    godBtn.Text = god and "God Mode: ON" or "God Mode: OFF"
-    godBtn.TextColor3 = god and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
-end)
+local godBtn = CreateToggleButton(menu, "God Mode: OFF", yPos,
+    function() return god end,
+    function(state) god = state; SetGod(state) end,
+    "God Mode: ON", "God Mode: OFF"
+)
 yPos = yPos + 0.07
 
 -- Speed
@@ -399,12 +409,14 @@ end)
 yPos = yPos + 0.055
 
 -- Fun Mode
-local funBtn = CreateButton(menu, "Fun Mode: OFF", yPos, function()
-    funMode = not funMode
-    funBtn.Text = funMode and "Fun Mode: ON" or "Fun Mode: OFF"
-    funBtn.TextColor3 = funMode and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
-    toggleBlur(funMode)
-end)
+local funBtn = CreateToggleButton(menu, "Fun Mode: OFF", yPos,
+    function() return funMode end,
+    function(state) 
+        funMode = state
+        toggleBlur(state)
+    end,
+    "Fun Mode: ON", "Fun Mode: OFF"
+)
 yPos = yPos + 0.07
 
 -- Mode
@@ -459,7 +471,7 @@ SetupSlider(sliderFun, fillFun, sliderFunBtn, funSpeedLabel, 1, 100, function(v)
 end)
 yPos = yPos + 0.055
 
--- Target (текст чёрный)
+-- Target
 targetLabel = Instance.new("TextLabel", menu)
 targetLabel.Size = UDim2.new(0.8, 0, 0, 20)
 targetLabel.Position = UDim2.new(0.1, 0, yPos, 0)
@@ -470,15 +482,13 @@ targetLabel.BackgroundTransparency = 1
 targetLabel.Font = Enum.Font.Gotham
 yPos = yPos + 0.04
 
--- Создаём список игроков
 UpdatePlayerList()
 yPos = yPos + 0.14
 
--- Кнопка обновления списка
 local refreshBtn = CreateButton(menu, "⟳ Refresh Players", yPos, function()
     UpdatePlayerList()
-    targetLabel.Text = "Target: Auto"
     targetPlayer = nil
+    targetLabel.Text = "Target: Auto"
 end)
 yPos = yPos + 0.07
 
@@ -492,6 +502,7 @@ local both = CreateButton(menu, "Enable All", yPos, function()
     SetInfJump(true)
     startInfJump()
     SetGod(true)
+    toggleBlur(true)
     ncBtn.Text = "NoClip: ON"
     ncBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
     jumpBtn.Text = "InfJump: ON"
@@ -500,7 +511,6 @@ local both = CreateButton(menu, "Enable All", yPos, function()
     godBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
     funBtn.Text = "Fun Mode: ON"
     funBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
-    toggleBlur(true)
 end)
 
 -- Открытие меню
@@ -508,7 +518,7 @@ openBtn.MouseButton1Click:Connect(function()
     menuOpen = not menuOpen
     menu.Visible = menuOpen
     if menuOpen then
-        UpdatePlayerList() -- обновляем список при открытии
+        UpdatePlayerList()
     end
     toggleBlur(menuOpen and funMode)
 end)
