@@ -1,4 +1,4 @@
--- DrunixHub (Стеклянное меню + список игроков)
+-- DrunixHub (Стеклянное меню, белый вход "DH", чёрный текст в меню)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:FindFirstChild("Humanoid")
@@ -9,10 +9,8 @@ local infJump = false
 local god = false
 local walkSpeed = 16
 local menuOpen = false
-local selectedPlayer = nil
 local targetPlayer = nil
 
--- Фан-режим
 local funMode = false
 local funModeType = "Circle"
 local funSpeed = 20
@@ -145,57 +143,26 @@ game:GetService("RunService").Heartbeat:Connect(function()
     end
 end)
 
--- GUI (Стеклянный стиль iOS)
+-- GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = "DrunixHub"
 gui.ResetOnSpawn = false
 
--- Кнопка входа (кот)
-local openBtn = Instance.new("ImageButton")
+-- Кнопка входа (белая, с надписью "DH")
+local openBtn = Instance.new("TextButton")
 openBtn.Size = UDim2.new(0, 70, 0, 70)
 openBtn.Position = UDim2.new(0.5, -35, 0.5, -35)
-openBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
-openBtn.BackgroundTransparency = 0.2
+openBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+openBtn.BackgroundTransparency = 0
 openBtn.BorderSizePixel = 0
-openBtn.Image = "rbxassetid://6031090944"
-openBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
+openBtn.Text = "DH"
+openBtn.TextColor3 = Color3.fromRGB(180, 0, 0)
+openBtn.TextSize = 28
+openBtn.Font = Enum.Font.GothamBold
 openBtn.Draggable = true
 openBtn.Active = true
 local corner = Instance.new("UICorner", openBtn)
 corner.CornerRadius = UDim.new(1, 0)
-
--- Кнопка Infinite Jump
-local jumpBtn = Instance.new("TextButton")
-jumpBtn.Size = UDim2.new(0, 80, 0, 80)
-jumpBtn.Position = UDim2.new(0.85, -40, 0.5, -40)
-jumpBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
-jumpBtn.BackgroundTransparency = 0.2
-jumpBtn.BorderSizePixel = 0
-jumpBtn.Text = "Jump"
-jumpBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-jumpBtn.TextSize = 18
-jumpBtn.Font = Enum.Font.GothamBold
-jumpBtn.Draggable = true
-jumpBtn.Active = true
-local cornerJump = Instance.new("UICorner", jumpBtn)
-cornerJump.CornerRadius = UDim.new(1, 0)
-
-local statusText = Instance.new("TextLabel", jumpBtn)
-statusText.Size = UDim2.new(1, 0, 0, 20)
-statusText.Position = UDim2.new(0, 0, 0.7, 0)
-statusText.Text = "OFF"
-statusText.TextColor3 = Color3.fromRGB(255, 100, 100)
-statusText.TextSize = 14
-statusText.BackgroundTransparency = 1
-statusText.Font = Enum.Font.GothamBold
-
-jumpBtn.MouseButton1Click:Connect(function()
-    SetInfJump(not infJump)
-    if infJump then startInfJump() end
-    jumpBtn.Text = infJump and "Jump ON" or "Jump"
-    statusText.Text = infJump and "ON" or "OFF"
-    statusText.TextColor3 = infJump and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 100, 100)
-end)
 
 -- Стеклянное меню
 local menu = Instance.new("Frame")
@@ -210,19 +177,15 @@ menu.Draggable = true
 local menuCorner = Instance.new("UICorner", menu)
 menuCorner.CornerRadius = UDim.new(0, 25)
 
--- Размытие (эффект стекла)
+-- Размытие
 local blur = Instance.new("BlurEffect", game:GetService("Lighting"))
 blur.Size = 0
 
 local function toggleBlur(on)
-    if on then
-        blur.Size = 15
-    else
-        blur.Size = 0
-    end
+    blur.Size = on and 15 or 0
 end
 
--- Заголовок
+-- Заголовок (белый)
 local title = Instance.new("TextLabel", menu)
 title.Size = UDim2.new(1, 0, 0, 50)
 title.Position = UDim2.new(0, 0, 0, 0)
@@ -232,6 +195,7 @@ title.TextSize = 28
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.GothamBold
 
+-- Закрыть (белый)
 local close = Instance.new("TextButton", menu)
 close.Size = UDim2.new(0, 40, 0, 40)
 close.Position = UDim2.new(1, -45, 0, 5)
@@ -246,7 +210,24 @@ close.MouseButton1Click:Connect(function()
     toggleBlur(false)
 end)
 
--- ScrollingFrame для списка игроков
+-- Функция создания кнопки (текст чёрный)
+local function CreateButton(parent, text, posY, callback)
+    local btn = Instance.new("TextButton", parent)
+    btn.Size = UDim2.new(0.8, 0, 0, 35)
+    btn.Position = UDim2.new(0.1, 0, posY, 0)
+    btn.Text = text
+    btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+    btn.TextSize = 14
+    btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    btn.BackgroundTransparency = 0.1
+    btn.BorderSizePixel = 0
+    local btnCorner = Instance.new("UICorner", btn)
+    btnCorner.CornerRadius = UDim.new(0, 12)
+    btn.MouseButton1Click:Connect(callback)
+    return btn
+end
+
+-- Функция для создания ScrollingFrame (список игроков)
 local function CreateScrollingList(parent, pos, width, height, items, onSelect)
     local frame = Instance.new("Frame", parent)
     frame.Size = UDim2.new(width, 0, height, 0)
@@ -262,7 +243,7 @@ local function CreateScrollingList(parent, pos, width, height, items, onSelect)
     scroll.BackgroundTransparency = 1
     scroll.BorderSizePixel = 0
     scroll.ScrollBarThickness = 5
-    scroll.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
+    scroll.ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0)
     scroll.ScrollBarImageTransparency = 0.5
     scroll.CanvasSize = UDim2.new(0, 0, 0, #items * 35 + 10)
     scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
@@ -276,7 +257,7 @@ local function CreateScrollingList(parent, pos, width, height, items, onSelect)
         local btn = Instance.new("TextButton", scroll)
         btn.Size = UDim2.new(0.9, 0, 0, 30)
         btn.Text = item
-        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.TextColor3 = Color3.fromRGB(0, 0, 0)
         btn.TextSize = 14
         btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         btn.BackgroundTransparency = 0.1
@@ -291,7 +272,7 @@ local function CreateScrollingList(parent, pos, width, height, items, onSelect)
     return frame
 end
 
--- Обновление списка игроков
+-- Получить список игроков
 local function GetPlayerList()
     local list = {}
     for _, p in pairs(game:GetService("Players"):GetPlayers()) do
@@ -305,31 +286,23 @@ local function GetPlayerList()
     return list
 end
 
--- Кнопки и элементы меню (упрощённо)
-local function CreateButton(parent, text, posY, callback)
-    local btn = Instance.new("TextButton", parent)
-    btn.Size = UDim2.new(0.8, 0, 0, 35)
-    btn.Position = UDim2.new(0.1, 0, posY, 0)
-    btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 14
-    btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    btn.BackgroundTransparency = 0.1
-    btn.BorderSizePixel = 0
-    local btnCorner = Instance.new("UICorner", btn)
-    btnCorner.CornerRadius = UDim.new(0, 12)
-    btn.MouseButton1Click:Connect(callback)
-    return btn
-end
-
--- Создание меню
+-- Элементы меню
 local yPos = 0.06
 
 -- NoClip
 local ncBtn = CreateButton(menu, "NoClip: OFF", yPos, function()
     SetNoClip(not noclip)
     ncBtn.Text = noclip and "NoClip: ON" or "NoClip: OFF"
-    ncBtn.TextColor3 = noclip and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 255, 255)
+    ncBtn.TextColor3 = noclip and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
+end)
+yPos = yPos + 0.07
+
+-- Infinite Jump
+local jumpBtn = CreateButton(menu, "InfJump: OFF", yPos, function()
+    SetInfJump(not infJump)
+    if infJump then startInfJump() end
+    jumpBtn.Text = infJump and "InfJump: ON" or "InfJump: OFF"
+    jumpBtn.TextColor3 = infJump and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
 end)
 yPos = yPos + 0.07
 
@@ -337,16 +310,16 @@ yPos = yPos + 0.07
 local godBtn = CreateButton(menu, "God Mode: OFF", yPos, function()
     SetGod(not god)
     godBtn.Text = god and "God Mode: ON" or "God Mode: OFF"
-    godBtn.TextColor3 = god and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 255, 255)
+    godBtn.TextColor3 = god and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
 end)
 yPos = yPos + 0.07
 
--- Speed
+-- Speed (текст чёрный)
 local speedLabel = Instance.new("TextLabel", menu)
 speedLabel.Size = UDim2.new(0.8, 0, 0, 20)
 speedLabel.Position = UDim2.new(0.1, 0, yPos, 0)
 speedLabel.Text = "Walk Speed: 16"
-speedLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+speedLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
 speedLabel.TextSize = 13
 speedLabel.BackgroundTransparency = 1
 speedLabel.Font = Enum.Font.Gotham
@@ -355,7 +328,7 @@ yPos = yPos + 0.035
 local sliderWalk = Instance.new("Frame", menu)
 sliderWalk.Size = UDim2.new(0.8, 0, 0, 6)
 sliderWalk.Position = UDim2.new(0.1, 0, yPos, 0)
-sliderWalk.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+sliderWalk.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 sliderWalk.BackgroundTransparency = 0.3
 sliderWalk.BorderSizePixel = 0
 local sliderCorner = Instance.new("UICorner", sliderWalk)
@@ -363,7 +336,7 @@ sliderCorner.CornerRadius = UDim.new(1, 0)
 
 local fillWalk = Instance.new("Frame", sliderWalk)
 fillWalk.Size = UDim2.new(0.16, 0, 1, 0)
-fillWalk.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+fillWalk.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
 fillWalk.BorderSizePixel = 0
 
 local sliderWalkBtn = Instance.new("TextButton", sliderWalk)
@@ -414,7 +387,7 @@ yPos = yPos + 0.055
 local funBtn = CreateButton(menu, "Fun Mode: OFF", yPos, function()
     funMode = not funMode
     funBtn.Text = funMode and "Fun Mode: ON" or "Fun Mode: OFF"
-    funBtn.TextColor3 = funMode and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 255, 255)
+    funBtn.TextColor3 = funMode and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
     toggleBlur(funMode)
 end)
 yPos = yPos + 0.07
@@ -432,12 +405,12 @@ local modeBtn = CreateButton(menu, "Mode: Circle", yPos, function()
 end)
 yPos = yPos + 0.07
 
--- Fun Speed
+-- Fun Speed (текст чёрный)
 local funSpeedLabel = Instance.new("TextLabel", menu)
 funSpeedLabel.Size = UDim2.new(0.8, 0, 0, 20)
 funSpeedLabel.Position = UDim2.new(0.1, 0, yPos, 0)
 funSpeedLabel.Text = "Fun Speed: 20"
-funSpeedLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+funSpeedLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
 funSpeedLabel.TextSize = 13
 funSpeedLabel.BackgroundTransparency = 1
 funSpeedLabel.Font = Enum.Font.Gotham
@@ -446,7 +419,7 @@ yPos = yPos + 0.035
 local sliderFun = Instance.new("Frame", menu)
 sliderFun.Size = UDim2.new(0.8, 0, 0, 6)
 sliderFun.Position = UDim2.new(0.1, 0, yPos, 0)
-sliderFun.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+sliderFun.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 sliderFun.BackgroundTransparency = 0.3
 sliderFun.BorderSizePixel = 0
 local sliderCornerFun = Instance.new("UICorner", sliderFun)
@@ -471,12 +444,12 @@ SetupSlider(sliderFun, fillFun, sliderFunBtn, funSpeedLabel, 1, 100, function(v)
 end)
 yPos = yPos + 0.055
 
--- Список игроков (цель для Fun Mode)
+-- Target (текст чёрный)
 local targetLabel = Instance.new("TextLabel", menu)
 targetLabel.Size = UDim2.new(0.8, 0, 0, 20)
 targetLabel.Position = UDim2.new(0.1, 0, yPos, 0)
 targetLabel.Text = "Target: Auto"
-targetLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+targetLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
 targetLabel.TextSize = 13
 targetLabel.BackgroundTransparency = 1
 targetLabel.Font = Enum.Font.Gotham
@@ -498,16 +471,14 @@ local both = CreateButton(menu, "Enable All", yPos, function()
     funMode = true
     ncBtn.Text = "NoClip: ON"
     ncBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+    jumpBtn.Text = "InfJump: ON"
+    jumpBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
     godBtn.Text = "God Mode: ON"
     godBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
-    jumpBtn.Text = "Jump ON"
-    statusText.Text = "ON"
-    statusText.TextColor3 = Color3.fromRGB(0, 255, 0)
     funBtn.Text = "Fun Mode: ON"
     funBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
     toggleBlur(true)
 end)
-yPos = yPos + 0.07
 
 -- Открытие меню
 openBtn.MouseButton1Click:Connect(function()
@@ -518,5 +489,4 @@ end)
 
 openBtn.Parent = gui
 menu.Parent = gui
-jumpBtn.Parent = gui
 gui.Parent = game:GetService("CoreGui")
