@@ -1,4 +1,4 @@
--- DrunixHub (Два окна: функции + игроки)
+-- DrunixHub (Статичные окна + перетаскиваемые)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:FindFirstChild("Humanoid")
@@ -136,7 +136,7 @@ game:GetService("RunService").Heartbeat:Connect(function()
     end
 end)
 
--- GUI (два окна)
+-- GUI
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "DrunixHub"
 screenGui.ResetOnSpawn = false
@@ -158,10 +158,12 @@ openBtn.Active = true
 local openCorner = Instance.new("UICorner", openBtn)
 openCorner.CornerRadius = UDim.new(1, 0)
 
--- ОКНО ФУНКЦИЙ
+-- ============================================
+-- СТАТИЧНОЕ ОКНО ФУНКЦИЙ (не двигается)
+-- ============================================
 local funcFrame = Instance.new("Frame")
 funcFrame.Size = UDim2.new(0, 250, 0, 380)
-funcFrame.Position = UDim2.new(0.2, 0, 0.5, -190)
+funcFrame.Position = UDim2.new(0.1, 0, 0.5, -190)
 funcFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 funcFrame.BackgroundTransparency = 0.1
 funcFrame.BorderSizePixel = 2
@@ -171,26 +173,21 @@ funcFrame.Active = true
 local funcCorner = Instance.new("UICorner", funcFrame)
 funcCorner.CornerRadius = UDim.new(0, 15)
 
--- Заголовок окна функций
-local funcDrag = Instance.new("Frame", funcFrame)
-funcDrag.Size = UDim2.new(1, 0, 0, 30)
-funcDrag.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-funcDrag.BackgroundTransparency = 0.3
-funcDrag.BorderSizePixel = 0
-funcDrag.Active = true
-funcDrag.Draggable = true
-local funcDragCorner = Instance.new("UICorner", funcDrag)
-funcDragCorner.CornerRadius = UDim.new(0, 15)
-
-local funcTitle = Instance.new("TextLabel", funcDrag)
+-- Заголовок (статичный)
+local funcTitle = Instance.new("TextLabel", funcFrame)
 funcTitle.Size = UDim2.new(1, 0, 0, 30)
+funcTitle.Position = UDim2.new(0, 0, 0, 0)
 funcTitle.Text = "⚙️ Functions"
 funcTitle.TextColor3 = Color3.fromRGB(0, 0, 0)
 funcTitle.TextSize = 18
-funcTitle.BackgroundTransparency = 1
+funcTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+funcTitle.BackgroundTransparency = 0.2
 funcTitle.Font = Enum.Font.GothamBold
+local funcTitleCorner = Instance.new("UICorner", funcTitle)
+funcTitleCorner.CornerRadius = UDim.new(0, 15)
 
-local funcClose = Instance.new("TextButton", funcDrag)
+-- Кнопка закрытия
+local funcClose = Instance.new("TextButton", funcFrame)
 funcClose.Size = UDim2.new(0, 30, 0, 30)
 funcClose.Position = UDim2.new(1, -35, 0, 0)
 funcClose.Text = "✕"
@@ -201,6 +198,8 @@ funcClose.Font = Enum.Font.GothamBold
 funcClose.MouseButton1Click:Connect(function()
     funcFrame.Visible = false
     playerFrame.Visible = false
+    dragFuncFrame.Visible = false
+    dragPlayerFrame.Visible = false
 end)
 
 -- Кнопки в окне функций
@@ -286,9 +285,8 @@ local function MakeFuncSlider(parent, labelText, yPos, minVal, maxVal, defaultVa
     end)
 end
 
--- Создание кнопок в окне функций
+-- Создание кнопок в статичном окне функций
 local fy = 0.08
-
 local ncBtn = MakeFuncButton(funcFrame, "NoClip: OFF", fy, function(btn)
     noclip = not noclip
     SetNoClip(noclip)
@@ -363,10 +361,12 @@ local allBtn = MakeFuncButton(funcFrame, "Enable All", fy, function(btn)
     funBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
 end)
 
--- ОКНО ИГРОКОВ
+-- ============================================
+-- СТАТИЧНОЕ ОКНО ИГРОКОВ (не двигается)
+-- ============================================
 local playerFrame = Instance.new("Frame")
 playerFrame.Size = UDim2.new(0, 200, 0, 300)
-playerFrame.Position = UDim2.new(0.6, 0, 0.5, -150)
+playerFrame.Position = UDim2.new(0.55, 0, 0.5, -150)
 playerFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 playerFrame.BackgroundTransparency = 0.1
 playerFrame.BorderSizePixel = 2
@@ -376,26 +376,20 @@ playerFrame.Active = true
 local playerCorner = Instance.new("UICorner", playerFrame)
 playerCorner.CornerRadius = UDim.new(0, 15)
 
--- Заголовок окна игроков
-local playerDrag = Instance.new("Frame", playerFrame)
-playerDrag.Size = UDim2.new(1, 0, 0, 30)
-playerDrag.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-playerDrag.BackgroundTransparency = 0.3
-playerDrag.BorderSizePixel = 0
-playerDrag.Active = true
-playerDrag.Draggable = true
-local playerDragCorner = Instance.new("UICorner", playerDrag)
-playerDragCorner.CornerRadius = UDim.new(0, 15)
-
-local playerTitle = Instance.new("TextLabel", playerDrag)
+-- Заголовок (статичный)
+local playerTitle = Instance.new("TextLabel", playerFrame)
 playerTitle.Size = UDim2.new(1, 0, 0, 30)
+playerTitle.Position = UDim2.new(0, 0, 0, 0)
 playerTitle.Text = "👥 Players"
 playerTitle.TextColor3 = Color3.fromRGB(0, 0, 0)
 playerTitle.TextSize = 18
-playerTitle.BackgroundTransparency = 1
+playerTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+playerTitle.BackgroundTransparency = 0.2
 playerTitle.Font = Enum.Font.GothamBold
+local playerTitleCorner = Instance.new("UICorner", playerTitle)
+playerTitleCorner.CornerRadius = UDim.new(0, 15)
 
-local playerClose = Instance.new("TextButton", playerDrag)
+local playerClose = Instance.new("TextButton", playerFrame)
 playerClose.Size = UDim2.new(0, 30, 0, 30)
 playerClose.Position = UDim2.new(1, -35, 0, 0)
 playerClose.Text = "✕"
@@ -406,9 +400,11 @@ playerClose.Font = Enum.Font.GothamBold
 playerClose.MouseButton1Click:Connect(function()
     playerFrame.Visible = false
     funcFrame.Visible = false
+    dragFuncFrame.Visible = false
+    dragPlayerFrame.Visible = false
 end)
 
--- Список игроков
+-- Список игроков (статичный)
 local playerScroll = Instance.new("ScrollingFrame", playerFrame)
 playerScroll.Size = UDim2.new(1, 0, 1, -30)
 playerScroll.Position = UDim2.new(0, 0, 0, 30)
@@ -454,7 +450,6 @@ local function RefreshPlayerList()
         btn.MouseButton1Click:Connect(function()
             if item == "No players" then return end
             targetPlayer = item
-            -- Подсвечиваем выбранного
             for _, child in pairs(playerScroll:GetChildren()) do
                 if child:IsA("TextButton") then
                     child.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -470,13 +465,353 @@ end
 
 RefreshPlayerList()
 
--- Открытие меню (оба окна)
+-- ============================================
+-- ПЕРЕТАСКИВАЕМОЕ ОКНО ФУНКЦИЙ (дубликат)
+-- ============================================
+local dragFuncFrame = Instance.new("Frame")
+dragFuncFrame.Size = UDim2.new(0, 250, 0, 380)
+dragFuncFrame.Position = UDim2.new(0.4, 0, 0.5, -190)
+dragFuncFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+dragFuncFrame.BackgroundTransparency = 0.1
+dragFuncFrame.BorderSizePixel = 2
+dragFuncFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+dragFuncFrame.Visible = false
+dragFuncFrame.Active = true
+local dragFuncCorner = Instance.new("UICorner", dragFuncFrame)
+dragFuncCorner.CornerRadius = UDim.new(0, 15)
+
+-- Заголовок (перетаскиваемый)
+local dragFuncTitle = Instance.new("TextLabel", dragFuncFrame)
+dragFuncTitle.Size = UDim2.new(1, 0, 0, 30)
+dragFuncTitle.Position = UDim2.new(0, 0, 0, 0)
+dragFuncTitle.Text = "⬇️ Drag Functions"
+dragFuncTitle.TextColor3 = Color3.fromRGB(0, 0, 0)
+dragFuncTitle.TextSize = 16
+dragFuncTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+dragFuncTitle.BackgroundTransparency = 0.2
+dragFuncTitle.Font = Enum.Font.GothamBold
+local dragFuncTitleCorner = Instance.new("UICorner", dragFuncTitle)
+dragFuncTitleCorner.CornerRadius = UDim.new(0, 15)
+dragFuncTitle.Active = true
+dragFuncTitle.Draggable = true
+
+local dragFuncClose = Instance.new("TextButton", dragFuncFrame)
+dragFuncClose.Size = UDim2.new(0, 30, 0, 30)
+dragFuncClose.Position = UDim2.new(1, -35, 0, 0)
+dragFuncClose.Text = "✕"
+dragFuncClose.TextColor3 = Color3.fromRGB(0, 0, 0)
+dragFuncClose.TextSize = 18
+dragFuncClose.BackgroundTransparency = 1
+dragFuncClose.Font = Enum.Font.GothamBold
+dragFuncClose.MouseButton1Click:Connect(function()
+    dragFuncFrame.Visible = false
+    dragPlayerFrame.Visible = false
+end)
+
+-- Копируем кнопки в перетаскиваемое окно
+local function CopyButtons(from, to)
+    for _, child in pairs(from:GetChildren()) do
+        if child:IsA("TextButton") and child ~= from:FindFirstChild("Close") then
+            local newBtn = child:Clone()
+            newBtn.Parent = to
+            newBtn.MouseButton1Click:Connect(function()
+                -- Перенаправляем на оригинальные функции
+                if newBtn.Text:find("NoClip") then
+                    noclip = not noclip
+                    SetNoClip(noclip)
+                    newBtn.Text = noclip and "NoClip: ON" or "NoClip: OFF"
+                    newBtn.TextColor3 = noclip and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
+                    ncBtn.Text = newBtn.Text
+                    ncBtn.TextColor3 = newBtn.TextColor3
+                elseif newBtn.Text:find("InfJump") then
+                    infJump = not infJump
+                    SetInfJump(infJump)
+                    if infJump then startInfJump() end
+                    newBtn.Text = infJump and "InfJump: ON" or "InfJump: OFF"
+                    newBtn.TextColor3 = infJump and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
+                    ijBtn.Text = newBtn.Text
+                    ijBtn.TextColor3 = newBtn.TextColor3
+                elseif newBtn.Text:find("God Mode") then
+                    god = not god
+                    SetGod(god)
+                    newBtn.Text = god and "God Mode: ON" or "God Mode: OFF"
+                    newBtn.TextColor3 = god and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
+                    godBtn.Text = newBtn.Text
+                    godBtn.TextColor3 = newBtn.TextColor3
+                elseif newBtn.Text:find("Fun Mode") then
+                    funMode = not funMode
+                    newBtn.Text = funMode and "Fun Mode: ON" or "Fun Mode: OFF"
+                    newBtn.TextColor3 = funMode and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
+                    funBtn.Text = newBtn.Text
+                    funBtn.TextColor3 = newBtn.TextColor3
+                elseif newBtn.Text:find("Mode") then
+                    local modes = {"Circle", "Follow", "Spin"}
+                    local current = 1
+                    for i, v in ipairs(modes) do
+                        if v == funModeType then current = i break end
+                    end
+                    current = current % 3 + 1
+                    funModeType = modes[current]
+                    newBtn.Text = "Mode: " .. funModeType
+                    modeBtn.Text = newBtn.Text
+                elseif newBtn.Text:find("Enable All") then
+                    noclip = true
+                    infJump = true
+                    god = true
+                    funMode = true
+                    SetNoClip(true)
+                    SetInfJump(true)
+                    startInfJump()
+                    SetGod(true)
+                    ncBtn.Text = "NoClip: ON"
+                    ncBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+                    ijBtn.Text = "InfJump: ON"
+                    ijBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+                    godBtn.Text = "God Mode: ON"
+                    godBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+                    funBtn.Text = "Fun Mode: ON"
+                    funBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+                    for _, b in pairs(dragFuncFrame:GetChildren()) do
+                        if b:IsA("TextButton") and b.Text:find("NoClip") then
+                            b.Text = "NoClip: ON"
+                            b.TextColor3 = Color3.fromRGB(0, 255, 0)
+                        elseif b:IsA("TextButton") and b.Text:find("InfJump") then
+                            b.Text = "InfJump: ON"
+                            b.TextColor3 = Color3.fromRGB(0, 255, 0)
+                        elseif b:IsA("TextButton") and b.Text:find("God Mode") then
+                            b.Text = "God Mode: ON"
+                            b.TextColor3 = Color3.fromRGB(0, 255, 0)
+                        elseif b:IsA("TextButton") and b.Text:find("Fun Mode") then
+                            b.Text = "Fun Mode: ON"
+                            b.TextColor3 = Color3.fromRGB(0, 255, 0)
+                        end
+                    end
+                end
+            end)
+        elseif child:IsA("TextLabel") and not child.Text:find("Drag") then
+            local newLabel = child:Clone()
+            newLabel.Parent = to
+        elseif child:IsA("Frame") then
+            local newSlider = child:Clone()
+            newSlider.Parent = to
+        end
+    end
+end
+
+-- Копируем кнопки и слайдеры
+for _, child in pairs(funcFrame:GetChildren()) do
+    if child:IsA("TextButton") and child ~= funcClose then
+        local newBtn = child:Clone()
+        newBtn.Parent = dragFuncFrame
+        -- Привязываем к тем же функциям
+        newBtn.MouseButton1Click:Connect(function()
+            if newBtn.Text:find("NoClip") then
+                noclip = not noclip
+                SetNoClip(noclip)
+                newBtn.Text = noclip and "NoClip: ON" or "NoClip: OFF"
+                newBtn.TextColor3 = noclip and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
+                ncBtn.Text = newBtn.Text
+                ncBtn.TextColor3 = newBtn.TextColor3
+            elseif newBtn.Text:find("InfJump") then
+                infJump = not infJump
+                SetInfJump(infJump)
+                if infJump then startInfJump() end
+                newBtn.Text = infJump and "InfJump: ON" or "InfJump: OFF"
+                newBtn.TextColor3 = infJump and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
+                ijBtn.Text = newBtn.Text
+                ijBtn.TextColor3 = newBtn.TextColor3
+            elseif newBtn.Text:find("God Mode") then
+                god = not god
+                SetGod(god)
+                newBtn.Text = god and "God Mode: ON" or "God Mode: OFF"
+                newBtn.TextColor3 = god and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
+                godBtn.Text = newBtn.Text
+                godBtn.TextColor3 = newBtn.TextColor3
+            elseif newBtn.Text:find("Fun Mode") then
+                funMode = not funMode
+                newBtn.Text = funMode and "Fun Mode: ON" or "Fun Mode: OFF"
+                newBtn.TextColor3 = funMode and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
+                funBtn.Text = newBtn.Text
+                funBtn.TextColor3 = newBtn.TextColor3
+            elseif newBtn.Text:find("Mode") then
+                local modes = {"Circle", "Follow", "Spin"}
+                local current = 1
+                for i, v in ipairs(modes) do
+                    if v == funModeType then current = i break end
+                end
+                current = current % 3 + 1
+                funModeType = modes[current]
+                newBtn.Text = "Mode: " .. funModeType
+                modeBtn.Text = newBtn.Text
+            elseif newBtn.Text:find("Enable All") then
+                noclip = true
+                infJump = true
+                god = true
+                funMode = true
+                SetNoClip(true)
+                SetInfJump(true)
+                startInfJump()
+                SetGod(true)
+                ncBtn.Text = "NoClip: ON"
+                ncBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+                ijBtn.Text = "InfJump: ON"
+                ijBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+                godBtn.Text = "God Mode: ON"
+                godBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+                funBtn.Text = "Fun Mode: ON"
+                funBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+                for _, b in pairs(dragFuncFrame:GetChildren()) do
+                    if b:IsA("TextButton") and b.Text:find("NoClip") then
+                        b.Text = "NoClip: ON"
+                        b.TextColor3 = Color3.fromRGB(0, 255, 0)
+                    elseif b:IsA("TextButton") and b.Text:find("InfJump") then
+                        b.Text = "InfJump: ON"
+                        b.TextColor3 = Color3.fromRGB(0, 255, 0)
+                    elseif b:IsA("TextButton") and b.Text:find("God Mode") then
+                        b.Text = "God Mode: ON"
+                        b.TextColor3 = Color3.fromRGB(0, 255, 0)
+                    elseif b:IsA("TextButton") and b.Text:find("Fun Mode") then
+                        b.Text = "Fun Mode: ON"
+                        b.TextColor3 = Color3.fromRGB(0, 255, 0)
+                    end
+                end
+            end
+        end)
+    elseif child:IsA("TextLabel") and child ~= funcTitle and not child.Text:find("Drag") then
+        local newLabel = child:Clone()
+        newLabel.Parent = dragFuncFrame
+    elseif child:IsA("Frame") then
+        local newSlider = child:Clone()
+        newSlider.Parent = dragFuncFrame
+    end
+end
+
+-- ============================================
+-- ПЕРЕТАСКИВАЕМОЕ ОКНО ИГРОКОВ (дубликат)
+-- ============================================
+local dragPlayerFrame = Instance.new("Frame")
+dragPlayerFrame.Size = UDim2.new(0, 200, 0, 300)
+dragPlayerFrame.Position = UDim2.new(0.75, 0, 0.5, -150)
+dragPlayerFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+dragPlayerFrame.BackgroundTransparency = 0.1
+dragPlayerFrame.BorderSizePixel = 2
+dragPlayerFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+dragPlayerFrame.Visible = false
+dragPlayerFrame.Active = true
+local dragPlayerCorner = Instance.new("UICorner", dragPlayerFrame)
+dragPlayerCorner.CornerRadius = UDim.new(0, 15)
+
+local dragPlayerTitle = Instance.new("TextLabel", dragPlayerFrame)
+dragPlayerTitle.Size = UDim2.new(1, 0, 0, 30)
+dragPlayerTitle.Position = UDim2.new(0, 0, 0, 0)
+dragPlayerTitle.Text = "⬇️ Drag Players"
+dragPlayerTitle.TextColor3 = Color3.fromRGB(0, 0, 0)
+dragPlayerTitle.TextSize = 16
+dragPlayerTitle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+dragPlayerTitle.BackgroundTransparency = 0.2
+dragPlayerTitle.Font = Enum.Font.GothamBold
+local dragPlayerTitleCorner = Instance.new("UICorner", dragPlayerTitle)
+dragPlayerTitleCorner.CornerRadius = UDim.new(0, 15)
+dragPlayerTitle.Active = true
+dragPlayerTitle.Draggable = true
+
+local dragPlayerClose = Instance.new("TextButton", dragPlayerFrame)
+dragPlayerClose.Size = UDim2.new(0, 30, 0, 30)
+dragPlayerClose.Position = UDim2.new(1, -35, 0, 0)
+dragPlayerClose.Text = "✕"
+dragPlayerClose.TextColor3 = Color3.fromRGB(0, 0, 0)
+dragPlayerClose.TextSize = 18
+dragPlayerClose.BackgroundTransparency = 1
+dragPlayerClose.Font = Enum.Font.GothamBold
+dragPlayerClose.MouseButton1Click:Connect(function()
+    dragPlayerFrame.Visible = false
+    dragFuncFrame.Visible = false
+end)
+
+-- Копируем список игроков
+local dragPlayerScroll = Instance.new("ScrollingFrame", dragPlayerFrame)
+dragPlayerScroll.Size = UDim2.new(1, 0, 1, -30)
+dragPlayerScroll.Position = UDim2.new(0, 0, 0, 30)
+dragPlayerScroll.BackgroundTransparency = 1
+dragPlayerScroll.BorderSizePixel = 0
+dragPlayerScroll.ScrollBarThickness = 4
+dragPlayerScroll.ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0)
+dragPlayerScroll.ScrollBarImageTransparency = 0.5
+
+local dragPlayerLayout = Instance.new("UIListLayout", dragPlayerScroll)
+dragPlayerLayout.FillDirection = Enum.FillDirection.Vertical
+dragPlayerLayout.Padding = UDim.new(0, 4)
+dragPlayerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local function RefreshDragPlayerList()
+    for _, child in pairs(dragPlayerScroll:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+    local list = {}
+    for _, p in pairs(game:GetService("Players"):GetPlayers()) do
+        if p ~= player then
+            table.insert(list, p.Name)
+        end
+    end
+    if #list == 0 then
+        table.insert(list, "No players")
+    end
+    dragPlayerScroll.CanvasSize = UDim2.new(0, 0, 0, #list * 32 + 10)
+    for _, item in ipairs(list) do
+        local btn = Instance.new("TextButton", dragPlayerScroll)
+        btn.Size = UDim2.new(0.9, 0, 0, 28)
+        btn.Text = item
+        btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+        btn.TextSize = 13
+        btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        btn.BackgroundTransparency = 0.1
+        btn.BorderSizePixel = 1
+        btn.BorderColor3 = Color3.fromRGB(0, 0, 0)
+        local bCorner = Instance.new("UICorner", btn)
+        bCorner.CornerRadius = UDim.new(0, 8)
+        btn.MouseButton1Click:Connect(function()
+            if item == "No players" then return end
+            targetPlayer = item
+            for _, child in pairs(dragPlayerScroll:GetChildren()) do
+                if child:IsA("TextButton") then
+                    child.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                    child.BackgroundTransparency = 0.1
+                end
+            end
+            btn.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+            btn.BackgroundTransparency = 0.3
+            -- Обновляем и в статическом окне
+            for _, child in pairs(playerScroll:GetChildren()) do
+                if child:IsA("TextButton") then
+                    child.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                    child.BackgroundTransparency = 0.1
+                end
+            end
+            for _, child in pairs(playerScroll:GetChildren()) do
+                if child:IsA("TextButton") and child.Text == item then
+                    child.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+                    child.BackgroundTransparency = 0.3
+                end
+            end
+            print("Target set to: " .. item)
+        end)
+    end
+end
+
+RefreshDragPlayerList()
+
+-- Открытие всех окон
 openBtn.MouseButton1Click:Connect(function()
     local vis = not funcFrame.Visible
     funcFrame.Visible = vis
     playerFrame.Visible = vis
+    dragFuncFrame.Visible = vis
+    dragPlayerFrame.Visible = vis
     if vis then
         RefreshPlayerList()
+        RefreshDragPlayerList()
     end
 end)
 
@@ -484,6 +819,8 @@ end)
 openBtn.Parent = screenGui
 funcFrame.Parent = screenGui
 playerFrame.Parent = screenGui
+dragFuncFrame.Parent = screenGui
+dragPlayerFrame.Parent = screenGui
 
 -- Безопасное добавление GUI
 local success, err = pcall(function()
