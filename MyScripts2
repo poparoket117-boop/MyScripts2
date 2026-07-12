@@ -1,4 +1,4 @@
--- DrunixHub (Оба окна перетаскиваемые + InfJump исправлен)
+-- DrunixHub (2 окна, оба перетаскиваемые, InfJump исправлен)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:FindFirstChild("Humanoid")
@@ -159,11 +159,13 @@ openBtn.Active = true
 local openCorner = Instance.new("UICorner", openBtn)
 openCorner.CornerRadius = UDim.new(1, 0)
 
--- Функция создания перетаскиваемого окна
-local function CreateDraggableWindow(title, size, position)
+-- ============================================
+-- ФУНКЦИЯ СОЗДАНИЯ ПЕРЕТАСКИВАЕМОГО ОКНА
+-- ============================================
+local function CreateWindow(title, size, pos)
     local frame = Instance.new("Frame")
     frame.Size = size
-    frame.Position = position
+    frame.Position = pos
     frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     frame.BackgroundTransparency = 0.1
     frame.BorderSizePixel = 2
@@ -173,7 +175,7 @@ local function CreateDraggableWindow(title, size, position)
     local corner = Instance.new("UICorner", frame)
     corner.CornerRadius = UDim.new(0, 15)
     
-    -- Заголовок (перетаскиваемый)
+    -- Заголовок (именно он будет перетаскиваться)
     local titleBar = Instance.new("TextLabel", frame)
     titleBar.Size = UDim2.new(1, 0, 0, 30)
     titleBar.Position = UDim2.new(0, 0, 0, 0)
@@ -185,6 +187,7 @@ local function CreateDraggableWindow(title, size, position)
     titleBar.Font = Enum.Font.GothamBold
     local titleCorner = Instance.new("UICorner", titleBar)
     titleCorner.CornerRadius = UDim.new(0, 15)
+    -- ВОТ ЭТО ГЛАВНОЕ — делаем заголовок перетаскиваемым
     titleBar.Active = true
     titleBar.Draggable = true
     
@@ -204,7 +207,7 @@ end
 -- ============================================
 -- ОКНО ФУНКЦИЙ (перетаскиваемое)
 -- ============================================
-local funcFrame, funcTitle, funcClose = CreateDraggableWindow(
+local funcFrame, funcTitle, funcClose = CreateWindow(
     "⚙️ Functions",
     UDim2.new(0, 250, 0, 380),
     UDim2.new(0.15, 0, 0.5, -190)
@@ -378,7 +381,7 @@ end)
 -- ============================================
 -- ОКНО ИГРОКОВ (перетаскиваемое)
 -- ============================================
-local playerFrame, playerTitle, playerClose = CreateDraggableWindow(
+local playerFrame, playerTitle, playerClose = CreateWindow(
     "👥 Players",
     UDim2.new(0, 200, 0, 300),
     UDim2.new(0.6, 0, 0.5, -150)
