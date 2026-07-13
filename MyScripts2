@@ -1,4 +1,4 @@
--- DrunixHub (2 окна, оба перетаскиваемые, InfJump исправлен)
+-- DrunixHub (Анти-Ragdoll + перетаскиваемые окна)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:FindFirstChild("Humanoid")
@@ -15,6 +15,19 @@ local funModeType = "Circle"
 local funSpeed = 20
 local circleAngle = 0
 
+-- АНТИ-RAGDOLL (отключаем падение в куклу)
+local function AntiRagdoll()
+    if hum then
+        hum.BreakJointsOnDeath = false
+        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Stagger, false)
+    end
+end
+
 -- Функции
 local function SetGod(state)
     god = state
@@ -29,7 +42,6 @@ local function SetGod(state)
     end
 end
 
--- ИСПРАВЛЕННЫЙ INFINITE JUMP
 local function SetInfJump(state)
     infJump = state
     if state then
@@ -66,6 +78,7 @@ player.CharacterAdded:Connect(function(newChar)
     if infJump then SetInfJump(true) startInfJump() end
     if god then SetGod(true) end
     hum.WalkSpeed = walkSpeed
+    AntiRagdoll()
 end)
 
 -- Основные циклы
@@ -84,6 +97,22 @@ game:GetService("RunService").Heartbeat:Connect(function()
         hum.Health = 9e9
         hum.MaxHealth = 9e9
         hum.BreakJointsOnDeath = false
+    end
+end)
+
+-- Анти-Ragdoll (постоянно)
+game:GetService("RunService").Heartbeat:Connect(function()
+    if hum then
+        hum.BreakJointsOnDeath = false
+        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.Stagger, false)
+        if hum:GetState() == Enum.HumanoidStateType.Dead then
+            hum:ChangeState(Enum.HumanoidStateType.Running)
+        end
     end
 end)
 
@@ -159,9 +188,7 @@ openBtn.Active = true
 local openCorner = Instance.new("UICorner", openBtn)
 openCorner.CornerRadius = UDim.new(1, 0)
 
--- ============================================
--- ФУНКЦИЯ СОЗДАНИЯ ПЕРЕТАСКИВАЕМОГО ОКНА
--- ============================================
+-- Функция создания перетаскиваемого окна
 local function CreateWindow(title, size, pos)
     local frame = Instance.new("Frame")
     frame.Size = size
@@ -175,7 +202,7 @@ local function CreateWindow(title, size, pos)
     local corner = Instance.new("UICorner", frame)
     corner.CornerRadius = UDim.new(0, 15)
     
-    -- Заголовок (именно он будет перетаскиваться)
+    -- Заголовок (перетаскиваемый)
     local titleBar = Instance.new("TextLabel", frame)
     titleBar.Size = UDim2.new(1, 0, 0, 30)
     titleBar.Position = UDim2.new(0, 0, 0, 0)
@@ -187,7 +214,6 @@ local function CreateWindow(title, size, pos)
     titleBar.Font = Enum.Font.GothamBold
     local titleCorner = Instance.new("UICorner", titleBar)
     titleCorner.CornerRadius = UDim.new(0, 15)
-    -- ВОТ ЭТО ГЛАВНОЕ — делаем заголовок перетаскиваемым
     titleBar.Active = true
     titleBar.Draggable = true
     
@@ -205,12 +231,12 @@ local function CreateWindow(title, size, pos)
 end
 
 -- ============================================
--- ОКНО ФУНКЦИЙ (перетаскиваемое)
+-- ОКНО ФУНКЦИЙ
 -- ============================================
 local funcFrame, funcTitle, funcClose = CreateWindow(
     "⚙️ Functions",
-    UDim2.new(0, 250, 0, 380),
-    UDim2.new(0.15, 0, 0.5, -190)
+    UDim2.new(0, 250, 0, 400),
+    UDim2.new(0.1, 0, 0.5, -200)
 )
 
 funcClose.MouseButton1Click:Connect(function()
@@ -329,6 +355,13 @@ local godBtn = MakeFuncButton(funcFrame, "God Mode: OFF", fy, function(btn)
 end)
 fy = fy + 0.07
 
+local antiRagBtn = MakeFuncButton(funcFrame, "Anti-Ragdoll: ON", fy, function(btn)
+    -- Всегда включено, просто для информации
+    btn.Text = "Anti-Ragdoll: ON"
+    btn.TextColor3 = Color3.fromRGB(0, 255, 0)
+end)
+fy = fy + 0.07
+
 MakeFuncSlider(funcFrame, "Walk Speed", fy, 1, 500, 16, function(v)
     walkSpeed = v
     if hum then hum.WalkSpeed = v end
@@ -379,12 +412,12 @@ local allBtn = MakeFuncButton(funcFrame, "Enable All", fy, function(btn)
 end)
 
 -- ============================================
--- ОКНО ИГРОКОВ (перетаскиваемое)
+-- ОКНО ИГРОКОВ
 -- ============================================
 local playerFrame, playerTitle, playerClose = CreateWindow(
     "👥 Players",
     UDim2.new(0, 200, 0, 300),
-    UDim2.new(0.6, 0, 0.5, -150)
+    UDim2.new(0.65, 0, 0.5, -150)
 )
 
 playerClose.MouseButton1Click:Connect(function()
