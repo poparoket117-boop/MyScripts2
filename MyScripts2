@@ -1,47 +1,21 @@
--- DrunixHub (Полная версия: все функции + нормальные ползунки)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:FindFirstChild("Humanoid")
 local root = char:FindFirstChild("HumanoidRootPart")
 
--- Настройки
 local noclip = false
 local infJump = false
 local god = false
 local fly = false
-local invisible = false
-local esp = false
-local antiAFK = false
-local autoFarm = false
 local walkSpeed = 16
 local flySpeed = 50
 local targetPlayer = nil
 
 local funMode = false
-local auraMode = false
 local funModeType = "Circle"
 local funSpeed = 20
 local circleAngle = 0
 
-local auraCopies = {}
-local auraRadius = 8
-local auraSpeed = 1.5
-
--- Сохранение конфига
-local config = {
-    noclip = false,
-    infJump = false,
-    god = false,
-    walkSpeed = 16,
-    flySpeed = 50,
-    funSpeed = 20,
-    auraSpeed = 1.5,
-    funModeType = "Circle"
-}
-
--- ============================================
--- ФУНКЦИИ
--- ============================================
 local function SetGod(state)
     god = state
     if state then
@@ -87,217 +61,87 @@ local function SetFly(state)
     fly = state
     if state then
         hum.PlatformStand = true
+        if not root:FindFirstChild("FlyVelocity") then
+            local bv = Instance.new("BodyVelocity")
+            bv.Name = "FlyVelocity"
+            bv.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+            bv.Velocity = Vector3.new(0, 0, 0)
+            bv.Parent = root
+        end
+        if not root:FindFirstChild("FlyGyro") then
+            local bg = Instance.new("BodyGyro")
+            bg.Name = "FlyGyro"
+            bg.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+            bg.P = 1e5
+            bg.CFrame = root.CFrame
+            bg.Parent = root
+        end
     else
         hum.PlatformStand = false
+        if root:FindFirstChild("FlyVelocity") then root.FlyVelocity:Destroy() end
+        if root:FindFirstChild("FlyGyro") then root.FlyGyro:Destroy() end
     end
 end
 
-local function SetInvisible(state)
-    invisible = state
-    if char then
+player.CharacterAdded:Connect(function(newChar)
+    char = newChar
+    hum = char:WaitForChild("Humanoid")
+    root = char:WaitForChild("HumanoidRootPart")
+    if noclip then SetNoClip(true) end
+    if infJump then SetInfJump(true) startInfJump() end
+    if god then SetGod(true) end
+    if fly then SetFly(true) end
+    hum.WalkSpeed = walkSpeed
+end)
+
+game:GetService("RunService").Heartbeat:Connect(function()
+    if noclip and char then
         for _, v in pairs(char:GetDescendants()) do
-            if v:IsA("BasePart") then
-                v.Transparency = state and 1 or 0
-            end
-        end
-    end
-end
-
--- ============================================
--- ANTI-RAGDOLL
--- ============================================
-local function AntiRagdoll()
-    if not hum then return end
-    hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-    hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
-    hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
-    hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-    hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, false)
-    hum:SetStateEnabled(Enum.HumanoidStateType.Stagger, false)
-    
-    local state = hum:GetState()
-    if state == Enum.HumanoidStateType.Dead or 
-       state == Enum.HumanoidStateType.Physics or 
-       state == Enum.HumanoidStateType.Ragdoll or
-       state == Enum.HumanoidStateType.FallingDown or
-       state == Enum.HumanoidStateType.Stagger then
-        hum:ChangeState(Enum.HumanoidStateType.Running)
-    end
-    hum.PlatformStand = false
-    hum.BreakJointsOnDeath = false
-end
-
-game:GetService("RunService").Heartbeat:Connect(AntiRagdoll)
-
-if hum then
-    hum:GetPropertyChangedSignal("Health"):Connect(function()
-        if hum.Health <= 0 then
-            hum.Health = god and 9e9 or 100
-            hum:ChangeState(Enum.HumanoidStateType.Running)
-        end
-    end)
-end
-
--- ============================================
--- ESP (подсветка игроков)
--- ============================================
-local espObjects = {}
-local function UpdateESP()
-    for _, obj in pairs(espObjects) do
-        if obj and obj.Parent then obj:Destroy() end
-    end
-    espObjects = {}
-    if not esp then return end
-    
-    for _, p in pairs(game:GetService("Players"):GetPlayers()) do
-        if p ~= player and p.Character then
-            local highlight = Instance.new("Highlight")
-            highlight.Adornee = p.Character
-            highlight.FillColor = Color3.fromRGB(255, 0, 0)
-            highlight.FillTransparency = 0.5
-            highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-            highlight.OutlineTransparency = 0
-            highlight.Parent = p.Character
-            table.insert(espObjects, highlight)
-        end
-    end
-end
-
-game:GetService("RunService").Heartbeat:Connect(UpdateESP)
-
--- ============================================
--- ANTI-AFK
--- ============================================
-game:GetService("RunService").Heartbeat:Connect(function()
-    if antiAFK then
-        local v = game:GetService("VirtualUser")
-        v:CaptureController()
-        v:ClickButton2(Vector2.new())
-    end
-end)
-
--- ============================================
--- AUTO FARM (простой сбор ресурсов)
--- ============================================
-game:GetService("RunService").Heartbeat:Connect(function()
-    if not autoFarm or not root then return end
-    for _, v in pairs(workspace:GetDescendants()) do
-        if v:IsA("Model") and v:FindFirstChild("HumanoidRootPart") then
-            if v.Name:find("Resource") or v.Name:find("Collect") or v.Name:find("Item") then
-                if (root.Position - v.HumanoidRootPart.Position).Magnitude < 15 then
-                    v:Destroy()
-                end
+            if v:IsA("BasePart") and v.CanCollide ~= false then
+                v.CanCollide = false
             end
         end
     end
 end)
 
--- ============================================
--- FLY (полёт)
--- ============================================
-local bodyVelocity = nil
-local bodyGyro = nil
-
-local function StartFly()
-    if not fly or not root then return end
-    if not bodyVelocity then
-        bodyVelocity = Instance.new("BodyVelocity")
-        bodyVelocity.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-        bodyVelocity.Parent = root
+game:GetService("RunService").Heartbeat:Connect(function()
+    if god and hum then
+        hum.Health = 9e9
+        hum.MaxHealth = 9e9
+        hum.BreakJointsOnDeath = false
     end
-    if not bodyGyro then
-        bodyGyro = Instance.new("BodyGyro")
-        bodyGyro.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
-        bodyGyro.P = 1e5
-        bodyGyro.CFrame = root.CFrame
-        bodyGyro.Parent = root
-    end
-    
-    local cam = workspace.CurrentCamera
-    local moveDir = Vector3.new(0, 0, 0)
-    local uis = game:GetService("UserInputService")
-    
-    if uis:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + cam.CFrame.LookVector end
-    if uis:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - cam.CFrame.LookVector end
-    if uis:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - cam.CFrame.RightVector end
-    if uis:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.CFrame.RightVector end
-    if uis:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0, 1, 0) end
-    if uis:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir = moveDir - Vector3.new(0, 1, 0) end
-    
-    if moveDir.Magnitude > 0 then
-        moveDir = moveDir.Unit * flySpeed
-    end
-    bodyVelocity.Velocity = moveDir
-    bodyGyro.CFrame = cam.CFrame
-end
-
-game:GetService("RunService").Heartbeat:Connect(StartFly)
-
--- ============================================
--- АУРА
--- ============================================
-local function CreateAura()
-    for _, copy in pairs(auraCopies) do
-        if copy and copy.Parent then copy:Destroy() end
-    end
-    auraCopies = {}
-    if not auraMode then return end
-    
-    local players = {}
-    for _, p in pairs(game:GetService("Players"):GetPlayers()) do
-        if p ~= player then table.insert(players, p) end
-    end
-    if #players == 0 then
-        for i = 1, 8 do table.insert(players, player) end
-    end
-    
-    local count = math.min(#players, 10)
-    for i = 1, count do
-        local p = players[i]
-        local copy = p.Character and p.Character:Clone() or char:Clone()
-        if copy then
-            copy.Parent = workspace
-            copy.Name = "AuraCopy_" .. i
-            for _, v in pairs(copy:GetDescendants()) do
-                if v:IsA("BasePart") then
-                    v.Transparency = 0.5
-                    v.Material = Enum.Material.Neon
-                    v.CanCollide = false
-                end
-            end
-            local h = copy:FindFirstChild("Humanoid")
-            if h then h:Destroy() end
-            table.insert(auraCopies, copy)
-        end
-    end
-end
+end)
 
 game:GetService("RunService").Heartbeat:Connect(function()
-    if not auraMode or not root then
-        for _, copy in pairs(auraCopies) do
-            if copy and copy.Parent then copy:Destroy() end
-        end
-        auraCopies = {}
-        return
-    end
-    
-    local now = tick()
-    for i, copy in pairs(auraCopies) do
-        if copy and copy.Parent then
-            local angle = (now * auraSpeed) + (i / #auraCopies) * 2 * math.pi
-            local x = math.cos(angle) * auraRadius
-            local z = math.sin(angle) * auraRadius
-            local y = math.sin(angle * 0.7) * 2
-            local pos = root.Position + Vector3.new(x, y, z)
-            copy:SetPrimaryPartCFrame(CFrame.new(pos, root.Position))
+    if infJump and hum then
+        local state = hum:GetState()
+        if state == Enum.HumanoidStateType.Landed or state == Enum.HumanoidStateType.Freefall then
+            hum:ChangeState(Enum.HumanoidStateType.Jumping)
         end
     end
 end)
 
--- ============================================
--- ФАН-РЕЖИМ
--- ============================================
+game:GetService("RunService").Heartbeat:Connect(function()
+    if fly and root and root:FindFirstChild("FlyVelocity") and root:FindFirstChild("FlyGyro") then
+        local cam = workspace.CurrentCamera
+        local moveDir = Vector3.new(0, 0, 0)
+        local uis = game:GetService("UserInputService")
+        
+        if uis:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + cam.CFrame.LookVector end
+        if uis:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - cam.CFrame.LookVector end
+        if uis:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - cam.CFrame.RightVector end
+        if uis:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + cam.CFrame.RightVector end
+        if uis:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0, 1, 0) end
+        if uis:IsKeyDown(Enum.KeyCode.LeftShift) then moveDir = moveDir - Vector3.new(0, 1, 0) end
+        
+        if moveDir.Magnitude > 0 then
+            moveDir = moveDir.Unit * flySpeed
+        end
+        root.FlyVelocity.Velocity = moveDir
+        root.FlyGyro.CFrame = cam.CFrame
+    end
+end)
+
 game:GetService("RunService").Heartbeat:Connect(function()
     if not funMode or not root then return end
     
@@ -347,44 +191,6 @@ game:GetService("RunService").Heartbeat:Connect(function()
     end
 end)
 
--- ============================================
--- СОХРАНЕНИЕ КОНФИГА
--- ============================================
-local function SaveConfig()
-    config.noclip = noclip
-    config.infJump = infJump
-    config.god = god
-    config.walkSpeed = walkSpeed
-    config.flySpeed = flySpeed
-    config.funSpeed = funSpeed
-    config.auraSpeed = auraSpeed
-    config.funModeType = funModeType
-    writefile("DrunixHub_Config.txt", game:GetService("HttpService"):JSONEncode(config))
-    print("[DrunixHub] Config saved!")
-end
-
-local function LoadConfig()
-    if isfile("DrunixHub_Config.txt") then
-        local data = game:GetService("HttpService"):JSONDecode(readfile("DrunixHub_Config.txt"))
-        if data then
-            noclip = data.noclip or false
-            infJump = data.infJump or false
-            god = data.god or false
-            walkSpeed = data.walkSpeed or 16
-            flySpeed = data.flySpeed or 50
-            funSpeed = data.funSpeed or 20
-            auraSpeed = data.auraSpeed or 1.5
-            funModeType = data.funModeType or "Circle"
-            print("[DrunixHub] Config loaded!")
-        end
-    end
-end
-
-LoadConfig()
-
--- ============================================
--- GUI
--- ============================================
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "DrunixHub"
 screenGui.ResetOnSpawn = false
@@ -405,51 +211,60 @@ openBtn.Active = true
 local openCorner = Instance.new("UICorner", openBtn)
 openCorner.CornerRadius = UDim.new(1, 0)
 
--- Функция создания окна
-local function CreateWindow(title, size, pos)
-    local frame = Instance.new("Frame")
-    frame.Size = size
-    frame.Position = pos
-    frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    frame.BackgroundTransparency = 0.1
-    frame.BorderSizePixel = 2
-    frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
-    frame.Visible = false
-    frame.Active = true
-    local corner = Instance.new("UICorner", frame)
-    corner.CornerRadius = UDim.new(0, 15)
-    
-    local titleBar = Instance.new("TextLabel", frame)
-    titleBar.Size = UDim2.new(1, 0, 0, 30)
-    titleBar.Position = UDim2.new(0, 0, 0, 0)
-    titleBar.Text = title
-    titleBar.TextColor3 = Color3.fromRGB(0, 0, 0)
-    titleBar.TextSize = 18
-    titleBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    titleBar.BackgroundTransparency = 0.2
-    titleBar.Font = Enum.Font.GothamBold
-    local titleCorner = Instance.new("UICorner", titleBar)
-    titleCorner.CornerRadius = UDim.new(0, 15)
-    titleBar.Active = true
-    titleBar.Draggable = true
-    
-    local closeBtn = Instance.new("TextButton", frame)
-    closeBtn.Size = UDim2.new(0, 30, 0, 30)
-    closeBtn.Position = UDim2.new(1, -35, 0, 0)
-    closeBtn.Text = "✕"
-    closeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-    closeBtn.TextSize = 18
-    closeBtn.BackgroundTransparency = 1
-    closeBtn.Font = Enum.Font.GothamBold
-    
-    return frame, titleBar, closeBtn
-end
+local menuFrame = Instance.new("Frame")
+menuFrame.Size = UDim2.new(0, 280, 0, 420)
+menuFrame.Position = UDim2.new(0.5, -140, 0.5, -210)
+menuFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+menuFrame.BackgroundTransparency = 0.1
+menuFrame.BorderSizePixel = 2
+menuFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+menuFrame.Visible = false
+menuFrame.Active = true
+local menuCorner = Instance.new("UICorner", menuFrame)
+menuCorner.CornerRadius = UDim.new(0, 15)
 
--- Кнопки
-local function MakeButton(parent, text, yPos, callback)
+local title = Instance.new("TextLabel", menuFrame)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.Text = "Drunix Hub"
+title.TextColor3 = Color3.fromRGB(0, 0, 0)
+title.TextSize = 18
+title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+title.BackgroundTransparency = 0.2
+title.Font = Enum.Font.GothamBold
+local titleCorner = Instance.new("UICorner", title)
+titleCorner.CornerRadius = UDim.new(0, 15)
+
+local closeBtn = Instance.new("TextButton", menuFrame)
+closeBtn.Size = UDim2.new(0, 30, 0, 30)
+closeBtn.Position = UDim2.new(1, -35, 0, 0)
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+closeBtn.TextSize = 18
+closeBtn.BackgroundTransparency = 1
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.MouseButton1Click:Connect(function()
+    menuFrame.Visible = false
+end)
+
+local scrollFrame = Instance.new("ScrollingFrame", menuFrame)
+scrollFrame.Size = UDim2.new(1, 0, 1, -35)
+scrollFrame.Position = UDim2.new(0, 0, 0, 32)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.BorderSizePixel = 0
+scrollFrame.ScrollBarThickness = 4
+scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0)
+scrollFrame.ScrollBarImageTransparency = 0.5
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 550)
+
+local layout = Instance.new("UIListLayout", scrollFrame)
+layout.FillDirection = Enum.FillDirection.Vertical
+layout.Padding = UDim.new(0, 5)
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local function MakeButton(parent, text, callback)
     local btn = Instance.new("TextButton", parent)
     btn.Size = UDim2.new(0.85, 0, 0, 28)
-    btn.Position = UDim2.new(0.075, 0, yPos, 0)
     btn.Text = text
     btn.TextColor3 = Color3.fromRGB(0, 0, 0)
     btn.TextSize = 13
@@ -465,10 +280,9 @@ local function MakeButton(parent, text, yPos, callback)
     return btn
 end
 
-local function MakeSlider(parent, labelText, yPos, minVal, maxVal, defaultVal, callback)
+local function MakeSlider(parent, labelText, minVal, maxVal, defaultVal, callback)
     local label = Instance.new("TextLabel", parent)
     label.Size = UDim2.new(0.85, 0, 0, 16)
-    label.Position = UDim2.new(0.075, 0, yPos, 0)
     label.Text = labelText .. ": " .. defaultVal
     label.TextColor3 = Color3.fromRGB(0, 0, 0)
     label.TextSize = 11
@@ -477,7 +291,6 @@ local function MakeSlider(parent, labelText, yPos, minVal, maxVal, defaultVal, c
     
     local slider = Instance.new("Frame", parent)
     slider.Size = UDim2.new(0.85, 0, 0, 5)
-    slider.Position = UDim2.new(0.075, 0, yPos + 0.035, 0)
     slider.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     slider.BackgroundTransparency = 0.3
     slider.BorderSizePixel = 1
@@ -528,122 +341,51 @@ local function MakeSlider(parent, labelText, yPos, minVal, maxVal, defaultVal, c
     end)
 end
 
--- ============================================
--- ОКНО ФУНКЦИЙ
--- ============================================
-local funcFrame, funcTitle, funcClose = CreateWindow(
-    "⚙️ Functions",
-    UDim2.new(0, 280, 0, 620),
-    UDim2.new(0.05, 0, 0.5, -310)
-)
-
-funcClose.MouseButton1Click:Connect(function()
-    funcFrame.Visible = false
-    playerFrame.Visible = false
-end)
-
-local fy = 0.08
-
-local ncBtn = MakeButton(funcFrame, "NoClip: OFF", fy, function(btn)
+local ncBtn = MakeButton(scrollFrame, "NoClip: OFF", function(btn)
     noclip = not noclip
     SetNoClip(noclip)
     btn.Text = noclip and "NoClip: ON" or "NoClip: OFF"
     btn.TextColor3 = noclip and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
 end)
-fy = fy + 0.07
 
-local ijBtn = MakeButton(funcFrame, "InfJump: OFF", fy, function(btn)
+local ijBtn = MakeButton(scrollFrame, "InfJump: OFF", function(btn)
     infJump = not infJump
     SetInfJump(infJump)
     if infJump then startInfJump() end
     btn.Text = infJump and "InfJump: ON" or "InfJump: OFF"
     btn.TextColor3 = infJump and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
 end)
-fy = fy + 0.07
 
-local godBtn = MakeButton(funcFrame, "God Mode: OFF", fy, function(btn)
+local godBtn = MakeButton(scrollFrame, "God Mode: OFF", function(btn)
     god = not god
     SetGod(god)
     btn.Text = god and "God Mode: ON" or "God Mode: OFF"
     btn.TextColor3 = god and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
 end)
-fy = fy + 0.07
 
-local flyBtn = MakeButton(funcFrame, "Fly: OFF", fy, function(btn)
+local flyBtn = MakeButton(scrollFrame, "Fly: OFF", function(btn)
     fly = not fly
     SetFly(fly)
     btn.Text = fly and "Fly: ON" or "Fly: OFF"
     btn.TextColor3 = fly and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
 end)
-fy = fy + 0.07
 
-local invBtn = MakeButton(funcFrame, "Invisible: OFF", fy, function(btn)
-    invisible = not invisible
-    SetInvisible(invisible)
-    btn.Text = invisible and "Invisible: ON" or "Invisible: OFF"
-    btn.TextColor3 = invisible and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
-end)
-fy = fy + 0.07
-
-local espBtn = MakeButton(funcFrame, "ESP: OFF", fy, function(btn)
-    esp = not esp
-    btn.Text = esp and "ESP: ON" or "ESP: OFF"
-    btn.TextColor3 = esp and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
-    UpdateESP()
-end)
-fy = fy + 0.07
-
-local afkBtn = MakeButton(funcFrame, "Anti-AFK: OFF", fy, function(btn)
-    antiAFK = not antiAFK
-    btn.Text = antiAFK and "Anti-AFK: ON" or "Anti-AFK: OFF"
-    btn.TextColor3 = antiAFK and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
-end)
-fy = fy + 0.07
-
-local farmBtn = MakeButton(funcFrame, "Auto Farm: OFF", fy, function(btn)
-    autoFarm = not autoFarm
-    btn.Text = autoFarm and "Auto Farm: ON" or "Auto Farm: OFF"
-    btn.TextColor3 = autoFarm and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
-end)
-fy = fy + 0.07
-
-MakeSlider(funcFrame, "Walk Speed", fy, 1, 500, 16, function(v)
+MakeSlider(scrollFrame, "Walk Speed", 1, 500, 16, function(v)
     walkSpeed = v
     if hum then hum.WalkSpeed = v end
 end)
-fy = fy + 0.085
 
-MakeSlider(funcFrame, "Fly Speed", fy, 1, 500, 50, function(v)
+MakeSlider(scrollFrame, "Fly Speed", 1, 200, 50, function(v)
     flySpeed = v
 end)
-fy = fy + 0.085
 
-local auraBtn = MakeButton(funcFrame, "Aura: OFF", fy, function(btn)
-    auraMode = not auraMode
-    btn.Text = auraMode and "Aura: ON" or "Aura: OFF"
-    btn.TextColor3 = auraMode and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
-    if auraMode then CreateAura() else
-        for _, copy in pairs(auraCopies) do
-            if copy and copy.Parent then copy:Destroy() end
-        end
-        auraCopies = {}
-    end
-end)
-fy = fy + 0.07
-
-MakeSlider(funcFrame, "Aura Speed", fy, 1, 100, 15, function(v)
-    auraSpeed = v / 10
-end)
-fy = fy + 0.085
-
-local funBtn = MakeButton(funcFrame, "Fun Mode: OFF", fy, function(btn)
+local funBtn = MakeButton(scrollFrame, "Fun Mode: OFF", function(btn)
     funMode = not funMode
     btn.Text = funMode and "Fun Mode: ON" or "Fun Mode: OFF"
     btn.TextColor3 = funMode and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
 end)
-fy = fy + 0.07
 
-local modeBtn = MakeButton(funcFrame, "Mode: Circle", fy, function(btn)
+local modeBtn = MakeButton(scrollFrame, "Mode: Circle", function(btn)
     local modes = {"Circle", "Follow", "Spin"}
     local current = 1
     for i, v in ipairs(modes) do
@@ -653,91 +395,29 @@ local modeBtn = MakeButton(funcFrame, "Mode: Circle", fy, function(btn)
     funModeType = modes[current]
     btn.Text = "Mode: " .. funModeType
 end)
-fy = fy + 0.07
 
-MakeSlider(funcFrame, "Fun Speed", fy, 1, 500, 20, function(v)
+MakeSlider(scrollFrame, "Fun Speed", 1, 100, 20, function(v)
     funSpeed = v
 end)
-fy = fy + 0.085
 
-local saveBtn = MakeButton(funcFrame, "💾 Save Config", fy, function()
-    SaveConfig()
-end)
-fy = fy + 0.07
+local targetLabel = Instance.new("TextLabel", scrollFrame)
+targetLabel.Size = UDim2.new(0.85, 0, 0, 18)
+targetLabel.Text = "Target: Auto"
+targetLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+targetLabel.TextSize = 12
+targetLabel.BackgroundTransparency = 1
+targetLabel.Font = Enum.Font.Gotham
 
-local loadBtn = MakeButton(funcFrame, "📂 Load Config", fy, function()
-    LoadConfig()
-end)
-fy = fy + 0.07
-
-local allBtn = MakeButton(funcFrame, "Enable All", fy, function(btn)
-    noclip = true
-    infJump = true
-    god = true
-    fly = true
-    invisible = true
-    esp = true
-    antiAFK = true
-    autoFarm = true
-    funMode = true
-    auraMode = true
-    SetNoClip(true)
-    SetInfJump(true)
-    startInfJump()
-    SetGod(true)
-    SetFly(true)
-    SetInvisible(true)
-    CreateAura()
-    ncBtn.Text = "NoClip: ON"
-    ncBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
-    ijBtn.Text = "InfJump: ON"
-    ijBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
-    godBtn.Text = "God Mode: ON"
-    godBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
-    flyBtn.Text = "Fly: ON"
-    flyBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
-    invBtn.Text = "Invisible: ON"
-    invBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
-    espBtn.Text = "ESP: ON"
-    espBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
-    afkBtn.Text = "Anti-AFK: ON"
-    afkBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
-    farmBtn.Text = "Auto Farm: ON"
-    farmBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
-    funBtn.Text = "Fun Mode: ON"
-    funBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
-    auraBtn.Text = "Aura: ON"
-    auraBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
-    UpdateESP()
-end)
-
--- ============================================
--- ОКНО ИГРОКОВ
--- ============================================
-local playerFrame, playerTitle, playerClose = CreateWindow(
-    "👥 Players",
-    UDim2.new(0, 200, 0, 300),
-    UDim2.new(0.7, 0, 0.5, -150)
-)
-
-playerClose.MouseButton1Click:Connect(function()
-    playerFrame.Visible = false
-    funcFrame.Visible = false
-end)
-
-local playerScroll = Instance.new("ScrollingFrame", playerFrame)
-playerScroll.Size = UDim2.new(1, 0, 1, -30)
-playerScroll.Position = UDim2.new(0, 0, 0, 30)
-playerScroll.BackgroundTransparency = 1
-playerScroll.BorderSizePixel = 0
+local playerScroll = Instance.new("ScrollingFrame", scrollFrame)
+playerScroll.Size = UDim2.new(0.85, 0, 0, 80)
+playerScroll.BackgroundTransparency = 0.2
+playerScroll.BorderSizePixel = 1
+playerScroll.BorderColor3 = Color3.fromRGB(0, 0, 0)
 playerScroll.ScrollBarThickness = 4
 playerScroll.ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0)
 playerScroll.ScrollBarImageTransparency = 0.5
-
-local playerLayout = Instance.new("UIListLayout", playerScroll)
-playerLayout.FillDirection = Enum.FillDirection.Vertical
-playerLayout.Padding = UDim.new(0, 4)
-playerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+local psCorner = Instance.new("UICorner", playerScroll)
+psCorner.CornerRadius = UDim.new(0, 8)
 
 local function RefreshPlayerList()
     for _, child in pairs(playerScroll:GetChildren()) do
@@ -754,50 +434,61 @@ local function RefreshPlayerList()
     if #list == 0 then
         table.insert(list, "No players")
     end
-    playerScroll.CanvasSize = UDim2.new(0, 0, 0, #list * 32 + 10)
+    playerScroll.CanvasSize = UDim2.new(0, 0, 0, #list * 28 + 10)
     for _, item in ipairs(list) do
         local btn = Instance.new("TextButton", playerScroll)
-        btn.Size = UDim2.new(0.9, 0, 0, 28)
+        btn.Size = UDim2.new(0.9, 0, 0, 24)
         btn.Text = item
         btn.TextColor3 = Color3.fromRGB(0, 0, 0)
-        btn.TextSize = 13
+        btn.TextSize = 12
         btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         btn.BackgroundTransparency = 0.1
         btn.BorderSizePixel = 1
         btn.BorderColor3 = Color3.fromRGB(0, 0, 0)
         local bCorner = Instance.new("UICorner", btn)
-        bCorner.CornerRadius = UDim.new(0, 8)
+        bCorner.CornerRadius = UDim.new(0, 6)
         btn.MouseButton1Click:Connect(function()
             if item == "No players" then return end
             targetPlayer = item
-            for _, child in pairs(playerScroll:GetChildren()) do
-                if child:IsA("TextButton") then
-                    child.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                    child.BackgroundTransparency = 0.1
-                end
-            end
-            btn.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-            btn.BackgroundTransparency = 0.3
+            targetLabel.Text = "Target: " .. item
         end)
     end
 end
 
 RefreshPlayerList()
 
--- Открытие окон
+local allBtn = MakeButton(scrollFrame, "Enable All", function()
+    noclip = true
+    infJump = true
+    god = true
+    fly = true
+    funMode = true
+    SetNoClip(true)
+    SetInfJump(true)
+    startInfJump()
+    SetGod(true)
+    SetFly(true)
+    ncBtn.Text = "NoClip: ON"
+    ncBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+    ijBtn.Text = "InfJump: ON"
+    ijBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+    godBtn.Text = "God Mode: ON"
+    godBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+    flyBtn.Text = "Fly: ON"
+    flyBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+    funBtn.Text = "Fun Mode: ON"
+    funBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+end)
+
 openBtn.MouseButton1Click:Connect(function()
-    local vis = not funcFrame.Visible
-    funcFrame.Visible = vis
-    playerFrame.Visible = vis
-    if vis then
+    menuFrame.Visible = not menuFrame.Visible
+    if menuFrame.Visible then
         RefreshPlayerList()
-        UpdateESP()
     end
 end)
 
 openBtn.Parent = screenGui
-funcFrame.Parent = screenGui
-playerFrame.Parent = screenGui
+menuFrame.Parent = screenGui
 
 local success, err = pcall(function()
     screenGui.Parent = game:GetService("CoreGui")
@@ -806,4 +497,4 @@ if not success then
     screenGui.Parent = player:WaitForChild("PlayerGui")
 end
 
-print("DrunixHub загружен! Нажми на кнопку DH.")
+print("DrunixHub loaded!")
