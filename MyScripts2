@@ -1,4 +1,4 @@
--- DrunixHub (Аура-копии + перетаскиваемые окна + Anti-Ragdoll)
+-- DrunixHub (Ползунки до 1.000.000 + Anti-Ragdoll)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:FindFirstChild("Humanoid")
@@ -16,7 +16,7 @@ local funModeType = "Circle"
 local funSpeed = 20
 local circleAngle = 0
 
-local auraCopies = {} -- храним копии
+local auraCopies = {}
 local auraRadius = 8
 local auraSpeed = 1.5
 
@@ -72,42 +72,45 @@ player.CharacterAdded:Connect(function(newChar)
     if infJump then SetInfJump(true) startInfJump() end
     if god then SetGod(true) end
     hum.WalkSpeed = walkSpeed
-    -- Если аура была включена — пересоздаём
     if auraMode then
         CreateAura()
     end
 end)
 
 -- ============================================
--- ANTI-RAGDOLL
+-- ANTI-RAGDOLL (рабочий)
 -- ============================================
-game:GetService("RunService").Heartbeat:Connect(function()
-    if hum then
-        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-        hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
-        hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
-        hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-        hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, false)
-        hum:SetStateEnabled(Enum.HumanoidStateType.Stagger, false)
-        hum:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding, false)
-        
-        local state = hum:GetState()
-        if state == Enum.HumanoidStateType.Dead or 
-           state == Enum.HumanoidStateType.Physics or 
-           state == Enum.HumanoidStateType.Ragdoll or
-           state == Enum.HumanoidStateType.FallingDown or
-           state == Enum.HumanoidStateType.Stagger then
-            hum:ChangeState(Enum.HumanoidStateType.Running)
-        end
-        hum.PlatformStand = false
-        hum.BreakJointsOnDeath = false
+local function AntiRagdoll()
+    if not hum then return end
+    hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+    hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
+    hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+    hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+    hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, false)
+    hum:SetStateEnabled(Enum.HumanoidStateType.Stagger, false)
+    hum:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding, false)
+    hum:SetStateEnabled(Enum.HumanoidStateType.Swimming, false)
+    hum:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
+    
+    local state = hum:GetState()
+    if state == Enum.HumanoidStateType.Dead or 
+       state == Enum.HumanoidStateType.Physics or 
+       state == Enum.HumanoidStateType.Ragdoll or
+       state == Enum.HumanoidStateType.FallingDown or
+       state == Enum.HumanoidStateType.Stagger then
+        hum:ChangeState(Enum.HumanoidStateType.Running)
     end
-end)
+    
+    hum.PlatformStand = false
+    hum.BreakJointsOnDeath = false
+end
+
+game:GetService("RunService").Heartbeat:Connect(AntiRagdoll)
 
 if hum then
     hum:GetPropertyChangedSignal("Health"):Connect(function()
-        if hum.Health <= 0 and god then
-            hum.Health = 100
+        if hum.Health <= 0 then
+            hum.Health = god and 9e9 or 100
             hum:ChangeState(Enum.HumanoidStateType.Running)
         end
     end)
@@ -117,7 +120,6 @@ end
 -- АУРА ИЗ КОПИЙ
 -- ============================================
 local function CreateAura()
-    -- Удаляем старые копии
     for _, copy in pairs(auraCopies) do
         if copy and copy.Parent then
             copy:Destroy()
@@ -127,7 +129,6 @@ local function CreateAura()
     
     if not auraMode then return end
     
-    -- Получаем список игроков для копий
     local players = {}
     for _, p in pairs(game:GetService("Players"):GetPlayers()) do
         if p ~= player then
@@ -135,13 +136,11 @@ local function CreateAura()
         end
     end
     if #players == 0 then
-        -- Если нет других игроков — делаем копии самого себя
         for i = 1, 8 do
             table.insert(players, player)
         end
     end
     
-    -- Создаём копии (максимум 10)
     local count = math.min(#players, 10)
     for i = 1, count do
         local p = players[i]
@@ -149,7 +148,6 @@ local function CreateAura()
         if copy then
             copy.Parent = workspace
             copy.Name = "AuraCopy_" .. i
-            -- Делаем полупрозрачными
             for _, v in pairs(copy:GetDescendants()) do
                 if v:IsA("BasePart") then
                     v.Transparency = 0.5
@@ -157,7 +155,6 @@ local function CreateAura()
                     v.CanCollide = false
                 end
             end
-            -- Убираем Humanoid (чтобы не двигались сами)
             local h = copy:FindFirstChild("Humanoid")
             if h then h:Destroy() end
             table.insert(auraCopies, copy)
@@ -165,10 +162,8 @@ local function CreateAura()
     end
 end
 
--- Движение копий по кругу
 game:GetService("RunService").Heartbeat:Connect(function()
     if not auraMode or not root then
-        -- Если аура выключена — удаляем копии
         for _, copy in pairs(auraCopies) do
             if copy and copy.Parent then
                 copy:Destroy()
@@ -181,10 +176,10 @@ game:GetService("RunService").Heartbeat:Connect(function()
     local now = tick()
     for i, copy in pairs(auraCopies) do
         if copy and copy.Parent then
-            local angle = (now * auraSpeed) + (i / #auraCopies) * 2 * math.pi
+            local angle = (now * (auraSpeed / 10)) + (i / #auraCopies) * 2 * math.pi
             local x = math.cos(angle) * auraRadius
             local z = math.sin(angle) * auraRadius
-            local y = math.sin(angle * 0.7) * 2 -- легкие колебания по высоте
+            local y = math.sin(angle * 0.7) * 2
             local pos = root.Position + Vector3.new(x, y, z)
             copy:SetPrimaryPartCFrame(CFrame.new(pos, root.Position))
         end
@@ -192,7 +187,7 @@ game:GetService("RunService").Heartbeat:Connect(function()
 end)
 
 -- ============================================
--- ФАН-РЕЖИМ (преследование/кружение)
+-- ФАН-РЕЖИМ
 -- ============================================
 game:GetService("RunService").Heartbeat:Connect(function()
     if not funMode or not root then return end
@@ -312,8 +307,8 @@ end
 -- ============================================
 local funcFrame, funcTitle, funcClose = CreateWindow(
     "⚙️ Functions",
-    UDim2.new(0, 250, 0, 460),
-    UDim2.new(0.1, 0, 0.5, -230)
+    UDim2.new(0, 250, 0, 500),
+    UDim2.new(0.1, 0, 0.5, -250)
 )
 
 funcClose.MouseButton1Click:Connect(function()
@@ -438,13 +433,14 @@ local antiRagBtn = MakeFuncButton(funcFrame, "Anti-Ragdoll: ON", fy, function(bt
 end)
 fy = fy + 0.07
 
-MakeFuncSlider(funcFrame, "Walk Speed", fy, 1, 500, 16, function(v)
+-- Walk Speed (1 - 1.000.000)
+MakeFuncSlider(funcFrame, "Walk Speed", fy, 1, 1000000, 16, function(v)
     walkSpeed = v
     if hum then hum.WalkSpeed = v end
 end)
 fy = fy + 0.085
 
--- Аура
+-- Aura
 local auraBtn = MakeFuncButton(funcFrame, "Aura: OFF", fy, function(btn)
     auraMode = not auraMode
     btn.Text = auraMode and "Aura: ON" or "Aura: OFF"
@@ -459,6 +455,12 @@ local auraBtn = MakeFuncButton(funcFrame, "Aura: OFF", fy, function(btn)
     end
 end)
 fy = fy + 0.07
+
+-- Aura Speed (1 - 1.000.000)
+MakeFuncSlider(funcFrame, "Aura Speed", fy, 1, 1000000, 15, function(v)
+    auraSpeed = v / 10
+end)
+fy = fy + 0.085
 
 local funBtn = MakeFuncButton(funcFrame, "Fun Mode: OFF", fy, function(btn)
     funMode = not funMode
@@ -479,7 +481,8 @@ local modeBtn = MakeFuncButton(funcFrame, "Mode: Circle", fy, function(btn)
 end)
 fy = fy + 0.07
 
-MakeFuncSlider(funcFrame, "Fun Speed", fy, 1, 100, 20, function(v)
+-- Fun Speed (1 - 1.000.000)
+MakeFuncSlider(funcFrame, "Fun Speed", fy, 1, 1000000, 20, function(v)
     funSpeed = v
 end)
 fy = fy + 0.085
@@ -521,7 +524,6 @@ playerClose.MouseButton1Click:Connect(function()
     funcFrame.Visible = false
 end)
 
--- Список игроков
 local playerScroll = Instance.new("ScrollingFrame", playerFrame)
 playerScroll.Size = UDim2.new(1, 0, 1, -30)
 playerScroll.Position = UDim2.new(0, 0, 0, 30)
@@ -575,7 +577,6 @@ local function RefreshPlayerList()
             end
             btn.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
             btn.BackgroundTransparency = 0.3
-            print("Target set to: " .. item)
         end)
     end
 end
@@ -597,7 +598,6 @@ openBtn.Parent = screenGui
 funcFrame.Parent = screenGui
 playerFrame.Parent = screenGui
 
--- Безопасное добавление GUI
 local success, err = pcall(function()
     screenGui.Parent = game:GetService("CoreGui")
 end)
