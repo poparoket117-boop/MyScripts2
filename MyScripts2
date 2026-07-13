@@ -1,4 +1,4 @@
--- DrunixHub (Anti-Ragdoll + перетаскивание)
+-- DrunixHub (Аура-копии + перетаскиваемые окна + Anti-Ragdoll)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:FindFirstChild("Humanoid")
@@ -11,11 +11,18 @@ local walkSpeed = 16
 local targetPlayer = nil
 
 local funMode = false
+local auraMode = false
 local funModeType = "Circle"
 local funSpeed = 20
 local circleAngle = 0
 
--- Функции
+local auraCopies = {} -- храним копии
+local auraRadius = 8
+local auraSpeed = 1.5
+
+-- ============================================
+-- ФУНКЦИИ
+-- ============================================
 local function SetGod(state)
     god = state
     if state then
@@ -65,33 +72,17 @@ player.CharacterAdded:Connect(function(newChar)
     if infJump then SetInfJump(true) startInfJump() end
     if god then SetGod(true) end
     hum.WalkSpeed = walkSpeed
-end)
-
--- Основные циклы
-game:GetService("RunService").Heartbeat:Connect(function()
-    if noclip and char then
-        for _, v in pairs(char:GetDescendants()) do
-            if v:IsA("BasePart") and v.CanCollide ~= false then
-                v.CanCollide = false
-            end
-        end
-    end
-end)
-
-game:GetService("RunService").Heartbeat:Connect(function()
-    if god and hum then
-        hum.Health = 9e9
-        hum.MaxHealth = 9e9
-        hum.BreakJointsOnDeath = false
+    -- Если аура была включена — пересоздаём
+    if auraMode then
+        CreateAura()
     end
 end)
 
 -- ============================================
--- РАБОЧИЙ ANTI-RAGDOLL
+-- ANTI-RAGDOLL
 -- ============================================
 game:GetService("RunService").Heartbeat:Connect(function()
     if hum then
-        -- Отключаем все состояния, которые ведут к ragdoll
         hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
         hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
         hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
@@ -100,7 +91,6 @@ game:GetService("RunService").Heartbeat:Connect(function()
         hum:SetStateEnabled(Enum.HumanoidStateType.Stagger, false)
         hum:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding, false)
         
-        -- Если персонаж всё же упал в ragdoll — принудительно возвращаем в нормальное состояние
         local state = hum:GetState()
         if state == Enum.HumanoidStateType.Dead or 
            state == Enum.HumanoidStateType.Physics or 
@@ -109,16 +99,11 @@ game:GetService("RunService").Heartbeat:Connect(function()
            state == Enum.HumanoidStateType.Stagger then
             hum:ChangeState(Enum.HumanoidStateType.Running)
         end
-        
-        -- Сбрасываем платформенную стойку (она иногда вызывает проблемы)
         hum.PlatformStand = false
         hum.BreakJointsOnDeath = false
     end
 end)
 
--- ============================================
--- ANTI-RAGDOLL при получении урона
--- ============================================
 if hum then
     hum:GetPropertyChangedSignal("Health"):Connect(function()
         if hum.Health <= 0 and god then
@@ -128,7 +113,87 @@ if hum then
     end)
 end
 
--- Фан-режим
+-- ============================================
+-- АУРА ИЗ КОПИЙ
+-- ============================================
+local function CreateAura()
+    -- Удаляем старые копии
+    for _, copy in pairs(auraCopies) do
+        if copy and copy.Parent then
+            copy:Destroy()
+        end
+    end
+    auraCopies = {}
+    
+    if not auraMode then return end
+    
+    -- Получаем список игроков для копий
+    local players = {}
+    for _, p in pairs(game:GetService("Players"):GetPlayers()) do
+        if p ~= player then
+            table.insert(players, p)
+        end
+    end
+    if #players == 0 then
+        -- Если нет других игроков — делаем копии самого себя
+        for i = 1, 8 do
+            table.insert(players, player)
+        end
+    end
+    
+    -- Создаём копии (максимум 10)
+    local count = math.min(#players, 10)
+    for i = 1, count do
+        local p = players[i]
+        local copy = p.Character and p.Character:Clone() or char:Clone()
+        if copy then
+            copy.Parent = workspace
+            copy.Name = "AuraCopy_" .. i
+            -- Делаем полупрозрачными
+            for _, v in pairs(copy:GetDescendants()) do
+                if v:IsA("BasePart") then
+                    v.Transparency = 0.5
+                    v.Material = Enum.Material.Neon
+                    v.CanCollide = false
+                end
+            end
+            -- Убираем Humanoid (чтобы не двигались сами)
+            local h = copy:FindFirstChild("Humanoid")
+            if h then h:Destroy() end
+            table.insert(auraCopies, copy)
+        end
+    end
+end
+
+-- Движение копий по кругу
+game:GetService("RunService").Heartbeat:Connect(function()
+    if not auraMode or not root then
+        -- Если аура выключена — удаляем копии
+        for _, copy in pairs(auraCopies) do
+            if copy and copy.Parent then
+                copy:Destroy()
+            end
+        end
+        auraCopies = {}
+        return
+    end
+    
+    local now = tick()
+    for i, copy in pairs(auraCopies) do
+        if copy and copy.Parent then
+            local angle = (now * auraSpeed) + (i / #auraCopies) * 2 * math.pi
+            local x = math.cos(angle) * auraRadius
+            local z = math.sin(angle) * auraRadius
+            local y = math.sin(angle * 0.7) * 2 -- легкие колебания по высоте
+            local pos = root.Position + Vector3.new(x, y, z)
+            copy:SetPrimaryPartCFrame(CFrame.new(pos, root.Position))
+        end
+    end
+end)
+
+-- ============================================
+-- ФАН-РЕЖИМ (преследование/кружение)
+-- ============================================
 game:GetService("RunService").Heartbeat:Connect(function()
     if not funMode or not root then return end
     
@@ -178,7 +243,9 @@ game:GetService("RunService").Heartbeat:Connect(function()
     end
 end)
 
--- GUI
+-- ============================================
+-- GUI (перетаскиваемые окна)
+-- ============================================
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "DrunixHub"
 screenGui.ResetOnSpawn = false
@@ -214,7 +281,6 @@ local function CreateWindow(title, size, pos)
     local corner = Instance.new("UICorner", frame)
     corner.CornerRadius = UDim.new(0, 15)
     
-    -- Заголовок (перетаскиваемый)
     local titleBar = Instance.new("TextLabel", frame)
     titleBar.Size = UDim2.new(1, 0, 0, 30)
     titleBar.Position = UDim2.new(0, 0, 0, 0)
@@ -229,7 +295,6 @@ local function CreateWindow(title, size, pos)
     titleBar.Active = true
     titleBar.Draggable = true
     
-    -- Кнопка закрытия
     local closeBtn = Instance.new("TextButton", frame)
     closeBtn.Size = UDim2.new(0, 30, 0, 30)
     closeBtn.Position = UDim2.new(1, -35, 0, 0)
@@ -243,12 +308,12 @@ local function CreateWindow(title, size, pos)
 end
 
 -- ============================================
--- ОКНО ФУНКЦИЙ (перетаскиваемое)
+-- ОКНО ФУНКЦИЙ
 -- ============================================
 local funcFrame, funcTitle, funcClose = CreateWindow(
     "⚙️ Functions",
-    UDim2.new(0, 250, 0, 420),
-    UDim2.new(0.1, 0, 0.5, -210)
+    UDim2.new(0, 250, 0, 460),
+    UDim2.new(0.1, 0, 0.5, -230)
 )
 
 funcClose.MouseButton1Click:Connect(function()
@@ -367,7 +432,6 @@ local godBtn = MakeFuncButton(funcFrame, "God Mode: OFF", fy, function(btn)
 end)
 fy = fy + 0.07
 
--- Anti-Ragdoll (всегда включена)
 local antiRagBtn = MakeFuncButton(funcFrame, "Anti-Ragdoll: ON", fy, function(btn)
     btn.Text = "Anti-Ragdoll: ON"
     btn.TextColor3 = Color3.fromRGB(0, 255, 0)
@@ -379,6 +443,22 @@ MakeFuncSlider(funcFrame, "Walk Speed", fy, 1, 500, 16, function(v)
     if hum then hum.WalkSpeed = v end
 end)
 fy = fy + 0.085
+
+-- Аура
+local auraBtn = MakeFuncButton(funcFrame, "Aura: OFF", fy, function(btn)
+    auraMode = not auraMode
+    btn.Text = auraMode and "Aura: ON" or "Aura: OFF"
+    btn.TextColor3 = auraMode and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
+    if auraMode then
+        CreateAura()
+    else
+        for _, copy in pairs(auraCopies) do
+            if copy and copy.Parent then copy:Destroy() end
+        end
+        auraCopies = {}
+    end
+end)
+fy = fy + 0.07
 
 local funBtn = MakeFuncButton(funcFrame, "Fun Mode: OFF", fy, function(btn)
     funMode = not funMode
@@ -409,10 +489,12 @@ local allBtn = MakeFuncButton(funcFrame, "Enable All", fy, function(btn)
     infJump = true
     god = true
     funMode = true
+    auraMode = true
     SetNoClip(true)
     SetInfJump(true)
     startInfJump()
     SetGod(true)
+    CreateAura()
     ncBtn.Text = "NoClip: ON"
     ncBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
     ijBtn.Text = "InfJump: ON"
@@ -421,10 +503,12 @@ local allBtn = MakeFuncButton(funcFrame, "Enable All", fy, function(btn)
     godBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
     funBtn.Text = "Fun Mode: ON"
     funBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+    auraBtn.Text = "Aura: ON"
+    auraBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
 end)
 
 -- ============================================
--- ОКНО ИГРОКОВ (перетаскиваемое)
+-- ОКНО ИГРОКОВ
 -- ============================================
 local playerFrame, playerTitle, playerClose = CreateWindow(
     "👥 Players",
