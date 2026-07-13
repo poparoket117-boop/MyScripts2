@@ -1,4 +1,4 @@
--- DrunixHub (Анти-Ragdoll + перетаскиваемые окна)
+-- DrunixHub (Anti-Ragdoll + перетаскивание)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:FindFirstChild("Humanoid")
@@ -14,19 +14,6 @@ local funMode = false
 local funModeType = "Circle"
 local funSpeed = 20
 local circleAngle = 0
-
--- АНТИ-RAGDOLL (отключаем падение в куклу)
-local function AntiRagdoll()
-    if hum then
-        hum.BreakJointsOnDeath = false
-        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-        hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
-        hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
-        hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
-        hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, false)
-        hum:SetStateEnabled(Enum.HumanoidStateType.Stagger, false)
-    end
-end
 
 -- Функции
 local function SetGod(state)
@@ -78,7 +65,6 @@ player.CharacterAdded:Connect(function(newChar)
     if infJump then SetInfJump(true) startInfJump() end
     if god then SetGod(true) end
     hum.WalkSpeed = walkSpeed
-    AntiRagdoll()
 end)
 
 -- Основные циклы
@@ -100,21 +86,47 @@ game:GetService("RunService").Heartbeat:Connect(function()
     end
 end)
 
--- Анти-Ragdoll (постоянно)
+-- ============================================
+-- РАБОЧИЙ ANTI-RAGDOLL
+-- ============================================
 game:GetService("RunService").Heartbeat:Connect(function()
     if hum then
-        hum.BreakJointsOnDeath = false
+        -- Отключаем все состояния, которые ведут к ragdoll
         hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
         hum:SetStateEnabled(Enum.HumanoidStateType.Physics, false)
         hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
         hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
         hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, false)
         hum:SetStateEnabled(Enum.HumanoidStateType.Stagger, false)
-        if hum:GetState() == Enum.HumanoidStateType.Dead then
+        hum:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding, false)
+        
+        -- Если персонаж всё же упал в ragdoll — принудительно возвращаем в нормальное состояние
+        local state = hum:GetState()
+        if state == Enum.HumanoidStateType.Dead or 
+           state == Enum.HumanoidStateType.Physics or 
+           state == Enum.HumanoidStateType.Ragdoll or
+           state == Enum.HumanoidStateType.FallingDown or
+           state == Enum.HumanoidStateType.Stagger then
             hum:ChangeState(Enum.HumanoidStateType.Running)
         end
+        
+        -- Сбрасываем платформенную стойку (она иногда вызывает проблемы)
+        hum.PlatformStand = false
+        hum.BreakJointsOnDeath = false
     end
 end)
+
+-- ============================================
+-- ANTI-RAGDOLL при получении урона
+-- ============================================
+if hum then
+    hum:GetPropertyChangedSignal("Health"):Connect(function()
+        if hum.Health <= 0 and god then
+            hum.Health = 100
+            hum:ChangeState(Enum.HumanoidStateType.Running)
+        end
+    end)
+end
 
 -- Фан-режим
 game:GetService("RunService").Heartbeat:Connect(function()
@@ -231,12 +243,12 @@ local function CreateWindow(title, size, pos)
 end
 
 -- ============================================
--- ОКНО ФУНКЦИЙ
+-- ОКНО ФУНКЦИЙ (перетаскиваемое)
 -- ============================================
 local funcFrame, funcTitle, funcClose = CreateWindow(
     "⚙️ Functions",
-    UDim2.new(0, 250, 0, 400),
-    UDim2.new(0.1, 0, 0.5, -200)
+    UDim2.new(0, 250, 0, 420),
+    UDim2.new(0.1, 0, 0.5, -210)
 )
 
 funcClose.MouseButton1Click:Connect(function()
@@ -355,8 +367,8 @@ local godBtn = MakeFuncButton(funcFrame, "God Mode: OFF", fy, function(btn)
 end)
 fy = fy + 0.07
 
+-- Anti-Ragdoll (всегда включена)
 local antiRagBtn = MakeFuncButton(funcFrame, "Anti-Ragdoll: ON", fy, function(btn)
-    -- Всегда включено, просто для информации
     btn.Text = "Anti-Ragdoll: ON"
     btn.TextColor3 = Color3.fromRGB(0, 255, 0)
 end)
@@ -412,12 +424,12 @@ local allBtn = MakeFuncButton(funcFrame, "Enable All", fy, function(btn)
 end)
 
 -- ============================================
--- ОКНО ИГРОКОВ
+-- ОКНО ИГРОКОВ (перетаскиваемое)
 -- ============================================
 local playerFrame, playerTitle, playerClose = CreateWindow(
     "👥 Players",
     UDim2.new(0, 200, 0, 300),
-    UDim2.new(0.65, 0, 0.5, -150)
+    UDim2.new(0.6, 0, 0.5, -150)
 )
 
 playerClose.MouseButton1Click:Connect(function()
