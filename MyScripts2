@@ -1,3 +1,4 @@
+-- DrunixHub (Invisible + fixed players + sliders)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:FindFirstChild("Humanoid")
@@ -7,6 +8,7 @@ local noclip = false
 local infJump = false
 local god = false
 local fly = false
+local invisible = false
 local walkSpeed = 16
 local flySpeed = 50
 local targetPlayer = nil
@@ -16,6 +18,7 @@ local funModeType = "Circle"
 local funSpeed = 20
 local circleAngle = 0
 
+-- Functions
 local function SetGod(state)
     god = state
     if state then
@@ -57,6 +60,16 @@ local function SetNoClip(state)
     end
 end
 
+local function SetInvisible(state)
+    invisible = state
+    if not char then return end
+    for _, v in pairs(char:GetDescendants()) do
+        if v:IsA("BasePart") then
+            v.Transparency = state and 1 or 0
+        end
+    end
+end
+
 local function SetFly(state)
     fly = state
     if state then
@@ -91,9 +104,11 @@ player.CharacterAdded:Connect(function(newChar)
     if infJump then SetInfJump(true) startInfJump() end
     if god then SetGod(true) end
     if fly then SetFly(true) end
+    if invisible then SetInvisible(true) end
     hum.WalkSpeed = walkSpeed
 end)
 
+-- Loops
 game:GetService("RunService").Heartbeat:Connect(function()
     if noclip and char then
         for _, v in pairs(char:GetDescendants()) do
@@ -191,6 +206,7 @@ game:GetService("RunService").Heartbeat:Connect(function()
     end
 end)
 
+-- GUI
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "DrunixHub"
 screenGui.ResetOnSpawn = false
@@ -255,15 +271,15 @@ scrollFrame.BorderSizePixel = 0
 scrollFrame.ScrollBarThickness = 4
 scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(0, 0, 0)
 scrollFrame.ScrollBarImageTransparency = 0.5
-scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 550)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 600)
 
 local layout = Instance.new("UIListLayout", scrollFrame)
 layout.FillDirection = Enum.FillDirection.Vertical
 layout.Padding = UDim.new(0, 5)
 layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-local function MakeButton(parent, text, callback)
-    local btn = Instance.new("TextButton", parent)
+local function MakeButton(text, callback)
+    local btn = Instance.new("TextButton", scrollFrame)
     btn.Size = UDim2.new(0.85, 0, 0, 28)
     btn.Text = text
     btn.TextColor3 = Color3.fromRGB(0, 0, 0)
@@ -280,8 +296,8 @@ local function MakeButton(parent, text, callback)
     return btn
 end
 
-local function MakeSlider(parent, labelText, minVal, maxVal, defaultVal, callback)
-    local label = Instance.new("TextLabel", parent)
+local function MakeSlider(labelText, minVal, maxVal, defaultVal, callback)
+    local label = Instance.new("TextLabel", scrollFrame)
     label.Size = UDim2.new(0.85, 0, 0, 16)
     label.Text = labelText .. ": " .. defaultVal
     label.TextColor3 = Color3.fromRGB(0, 0, 0)
@@ -289,7 +305,7 @@ local function MakeSlider(parent, labelText, minVal, maxVal, defaultVal, callbac
     label.BackgroundTransparency = 1
     label.Font = Enum.Font.Gotham
     
-    local slider = Instance.new("Frame", parent)
+    local slider = Instance.new("Frame", scrollFrame)
     slider.Size = UDim2.new(0.85, 0, 0, 5)
     slider.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     slider.BackgroundTransparency = 0.3
@@ -341,14 +357,15 @@ local function MakeSlider(parent, labelText, minVal, maxVal, defaultVal, callbac
     end)
 end
 
-local ncBtn = MakeButton(scrollFrame, "NoClip: OFF", function(btn)
+-- Buttons
+local ncBtn = MakeButton("NoClip: OFF", function(btn)
     noclip = not noclip
     SetNoClip(noclip)
     btn.Text = noclip and "NoClip: ON" or "NoClip: OFF"
     btn.TextColor3 = noclip and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
 end)
 
-local ijBtn = MakeButton(scrollFrame, "InfJump: OFF", function(btn)
+local ijBtn = MakeButton("InfJump: OFF", function(btn)
     infJump = not infJump
     SetInfJump(infJump)
     if infJump then startInfJump() end
@@ -356,36 +373,44 @@ local ijBtn = MakeButton(scrollFrame, "InfJump: OFF", function(btn)
     btn.TextColor3 = infJump and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
 end)
 
-local godBtn = MakeButton(scrollFrame, "God Mode: OFF", function(btn)
+local godBtn = MakeButton("God Mode: OFF", function(btn)
     god = not god
     SetGod(god)
     btn.Text = god and "God Mode: ON" or "God Mode: OFF"
     btn.TextColor3 = god and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
 end)
 
-local flyBtn = MakeButton(scrollFrame, "Fly: OFF", function(btn)
+local flyBtn = MakeButton("Fly: OFF", function(btn)
     fly = not fly
     SetFly(fly)
     btn.Text = fly and "Fly: ON" or "Fly: OFF"
     btn.TextColor3 = fly and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
 end)
 
-MakeSlider(scrollFrame, "Walk Speed", 1, 500, 16, function(v)
+local invBtn = MakeButton("Invisible: OFF", function(btn)
+    invisible = not invisible
+    SetInvisible(invisible)
+    btn.Text = invisible and "Invisible: ON" or "Invisible: OFF"
+    btn.TextColor3 = invisible and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
+end)
+
+-- Sliders
+MakeSlider("Walk Speed", 1, 500, 16, function(v)
     walkSpeed = v
     if hum then hum.WalkSpeed = v end
 end)
 
-MakeSlider(scrollFrame, "Fly Speed", 1, 200, 50, function(v)
+MakeSlider("Fly Speed", 1, 200, 50, function(v)
     flySpeed = v
 end)
 
-local funBtn = MakeButton(scrollFrame, "Fun Mode: OFF", function(btn)
+local funBtn = MakeButton("Fun Mode: OFF", function(btn)
     funMode = not funMode
     btn.Text = funMode and "Fun Mode: ON" or "Fun Mode: OFF"
     btn.TextColor3 = funMode and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(0, 0, 0)
 end)
 
-local modeBtn = MakeButton(scrollFrame, "Mode: Circle", function(btn)
+local modeBtn = MakeButton("Mode: Circle", function(btn)
     local modes = {"Circle", "Follow", "Spin"}
     local current = 1
     for i, v in ipairs(modes) do
@@ -396,7 +421,7 @@ local modeBtn = MakeButton(scrollFrame, "Mode: Circle", function(btn)
     btn.Text = "Mode: " .. funModeType
 end)
 
-MakeSlider(scrollFrame, "Fun Speed", 1, 100, 20, function(v)
+MakeSlider("Fun Speed", 1, 100, 20, function(v)
     funSpeed = v
 end)
 
@@ -457,17 +482,19 @@ end
 
 RefreshPlayerList()
 
-local allBtn = MakeButton(scrollFrame, "Enable All", function()
+local allBtn = MakeButton("Enable All", function()
     noclip = true
     infJump = true
     god = true
     fly = true
+    invisible = true
     funMode = true
     SetNoClip(true)
     SetInfJump(true)
     startInfJump()
     SetGod(true)
     SetFly(true)
+    SetInvisible(true)
     ncBtn.Text = "NoClip: ON"
     ncBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
     ijBtn.Text = "InfJump: ON"
@@ -476,6 +503,8 @@ local allBtn = MakeButton(scrollFrame, "Enable All", function()
     godBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
     flyBtn.Text = "Fly: ON"
     flyBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
+    invBtn.Text = "Invisible: ON"
+    invBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
     funBtn.Text = "Fun Mode: ON"
     funBtn.TextColor3 = Color3.fromRGB(0, 255, 0)
 end)
