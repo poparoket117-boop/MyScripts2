@@ -1,69 +1,65 @@
--- DrunixHub :: Free Run Animation
+-- DrunixHub :: Universal Run Animation (все игры)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:WaitForChild("Humanoid")
 
--- Создаём кнопку на экране
+local isRunning = false
+local animTrack = nil
+
+-- Создаём кнопку
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "DrunixHub"
 screenGui.ResetOnSpawn = false
 
 local btn = Instance.new("TextButton", screenGui)
-btn.Size = UDim2.new(0, 200, 0, 60)
+btn.Size = UDim2.new(0, 200, 0, 55)
 btn.Position = UDim2.new(0.5, -100, 0.8, 0)
 btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-btn.Text = "Free Run"
-btn.TextSize = 24
+btn.Text = "🏃 Run Animation"
+btn.TextSize = 22
 btn.Font = Enum.Font.GothamBold
 btn.BorderSizePixel = 0
 local corner = Instance.new("UICorner", btn)
 corner.CornerRadius = UDim.new(0, 12)
 
--- Флаг для отслеживания состояния
-local isRunning = false
-
 btn.MouseButton1Click:Connect(function()
-    if not char or not hum then return end
-    
+    if not hum then return end
     isRunning = not isRunning
     
     if isRunning then
-        -- Устанавливаем анимацию бега (ID анимации Roblox)
-        local animId = "rbxassetid://507767531"  -- стандартный бег
-        local animTrack = hum:LoadAnimation(Instance.new("Animation"))
-        animTrack.AnimationId = animId
+        -- Загружаем стандартную анимацию бега
+        local anim = Instance.new("Animation")
+        anim.AnimationId = "rbxassetid://507767531" -- ID бега
+        animTrack = hum:LoadAnimation(anim)
         animTrack:Play()
         
-        btn.Text = "Stop Run"
-        btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-        
-        -- Увеличиваем скорость бега
-        hum.WalkSpeed = 22
+        btn.Text = "🛑 Stop Run"
+        btn.BackgroundColor3 = Color3.fromRGB(180, 30, 30)
+        hum.WalkSpeed = 22 -- небольшая скорость для эффекта
     else
-        -- Останавливаем анимацию
-        for _, track in pairs(hum:GetPlayingAnimationTracks()) do
-            track:Stop()
+        if animTrack then
+            animTrack:Stop()
+            animTrack:Destroy()
         end
-        btn.Text = "Free Run"
+        btn.Text = "🏃 Run Animation"
         btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
         hum.WalkSpeed = 16
     end
 end)
 
--- Обновляем персонажа при респавне
+-- Сброс при респавне
 player.CharacterAdded:Connect(function(newChar)
     char = newChar
     hum = char:WaitForChild("Humanoid")
     if isRunning then
         isRunning = false
-        btn.Text = "Free Run"
+        btn.Text = "🏃 Run Animation"
         btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
         hum.WalkSpeed = 16
     end
 end)
 
--- Добавляем GUI
 screenGui.Parent = game:GetService("CoreGui")
 
-print("DrunixHub: Free Run Animation loaded!")
+print("DrunixHub: Run Animation loaded!")
