@@ -1,35 +1,69 @@
--- DrunixHub :: Free Animation Only
-local originalScript = loadstring(game:HttpGet("https://api.luarmor.net/files/v4/loaders/5857a6cfae3b902eb3c2dff7cdbf173b.lua"))()
+-- DrunixHub :: Free Run Animation
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hum = char:WaitForChild("Humanoid")
 
--- Ждём, пока загрузится GUI
-task.wait(1)
+-- Создаём кнопку на экране
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "DrunixHub"
+screenGui.ResetOnSpawn = false
 
--- Ищем все ScreenGui
-for _, gui in pairs(game:GetService("CoreGui"):GetChildren()) do
-    if gui:IsA("ScreenGui") then
-        -- Проходим по всем кнопкам/фреймам
-        for _, child in pairs(gui:GetDescendants()) do
-            if child:IsA("TextButton") or child:IsA("ImageButton") then
-                -- Если текст кнопки НЕ содержит "Free Animation" — удаляем
-                if child.Text and not child.Text:find("Free Animation") then
-                    child:Destroy()
-                end
-            end
-            if child:IsA("Frame") or child:IsA("ScrollingFrame") then
-                -- Если внутри фрейма нет кнопок с "Free Animation" — удаляем фрейм
-                local hasFreeAnim = false
-                for _, btn in pairs(child:GetDescendants()) do
-                    if btn:IsA("TextButton") and btn.Text and btn.Text:find("Free Animation") then
-                        hasFreeAnim = true
-                        break
-                    end
-                end
-                if not hasFreeAnim then
-                    child:Destroy()
-                end
-            end
+local btn = Instance.new("TextButton", screenGui)
+btn.Size = UDim2.new(0, 200, 0, 60)
+btn.Position = UDim2.new(0.5, -100, 0.8, 0)
+btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+btn.Text = "Free Run"
+btn.TextSize = 24
+btn.Font = Enum.Font.GothamBold
+btn.BorderSizePixel = 0
+local corner = Instance.new("UICorner", btn)
+corner.CornerRadius = UDim.new(0, 12)
+
+-- Флаг для отслеживания состояния
+local isRunning = false
+
+btn.MouseButton1Click:Connect(function()
+    if not char or not hum then return end
+    
+    isRunning = not isRunning
+    
+    if isRunning then
+        -- Устанавливаем анимацию бега (ID анимации Roblox)
+        local animId = "rbxassetid://507767531"  -- стандартный бег
+        local animTrack = hum:LoadAnimation(Instance.new("Animation"))
+        animTrack.AnimationId = animId
+        animTrack:Play()
+        
+        btn.Text = "Stop Run"
+        btn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        
+        -- Увеличиваем скорость бега
+        hum.WalkSpeed = 22
+    else
+        -- Останавливаем анимацию
+        for _, track in pairs(hum:GetPlayingAnimationTracks()) do
+            track:Stop()
         end
+        btn.Text = "Free Run"
+        btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+        hum.WalkSpeed = 16
     end
-end
+end)
 
-print("DrunixHub: Only 'Free Animation' left.")
+-- Обновляем персонажа при респавне
+player.CharacterAdded:Connect(function(newChar)
+    char = newChar
+    hum = char:WaitForChild("Humanoid")
+    if isRunning then
+        isRunning = false
+        btn.Text = "Free Run"
+        btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+        hum.WalkSpeed = 16
+    end
+end)
+
+-- Добавляем GUI
+screenGui.Parent = game:GetService("CoreGui")
+
+print("DrunixHub: Free Run Animation loaded!")
