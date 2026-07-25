@@ -1,10 +1,12 @@
--- DrunixHub :: Free Animation (как в том скрипте)
+-- DrunixHub :: Zombie Run (для MM2 / Ragdoll)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:WaitForChild("Humanoid")
+local root = char:WaitForChild("HumanoidRootPart")
 
-local isAnimating = false
-local animTrack = nil
+local isZombie = false
+local normalSpeed = 16
+local zombieSpeed = 50
 
 -- Создаём кнопку
 local screenGui = Instance.new("ScreenGui")
@@ -12,36 +14,39 @@ screenGui.Name = "DrunixHub"
 screenGui.ResetOnSpawn = false
 
 local btn = Instance.new("TextButton", screenGui)
-btn.Size = UDim2.new(0, 200, 0, 55)
-btn.Position = UDim2.new(0.5, -100, 0.8, 0)
+btn.Size = UDim2.new(0, 180, 0, 55)
+btn.Position = UDim2.new(0.5, -90, 0.8, 0)
 btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-btn.Text = "🎭 Free Animation"
+btn.Text = "🧟 Zombie Run"
 btn.TextSize = 22
 btn.Font = Enum.Font.GothamBold
 btn.BorderSizePixel = 0
 local corner = Instance.new("UICorner", btn)
 corner.CornerRadius = UDim.new(0, 12)
 
+local function startZombie()
+    if not hum then return end
+    hum.WalkSpeed = zombieSpeed
+    -- Дёрганое движение (эффект зомби)
+    game:GetService("RunService").Heartbeat:Connect(function()
+        if isZombie and root then
+            root.CFrame = root.CFrame * CFrame.Angles(0, 0.15, 0)
+        end
+    end)
+end
+
 btn.MouseButton1Click:Connect(function()
     if not hum then return end
-    isAnimating = not isAnimating
+    isZombie = not isZombie
     
-    if isAnimating then
-        -- Механика из того скрипта (бег)
-        local anim = Instance.new("Animation")
-        anim.AnimationId = "rbxassetid://507767531"  -- стандартный бег
-        animTrack = hum:LoadAnimation(anim)
-        animTrack:Play()
-        
-        btn.Text = "🛑 Stop Animation"
+    if isZombie then
+        startZombie()
+        btn.Text = "🧟 Stop Zombie"
         btn.BackgroundColor3 = Color3.fromRGB(180, 30, 30)
     else
-        if animTrack then
-            animTrack:Stop()
-            animTrack:Destroy()
-        end
-        btn.Text = "🎭 Free Animation"
+        hum.WalkSpeed = normalSpeed
+        btn.Text = "🧟 Zombie Run"
         btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
     end
 end)
@@ -50,13 +55,15 @@ end)
 player.CharacterAdded:Connect(function(newChar)
     char = newChar
     hum = char:WaitForChild("Humanoid")
-    if isAnimating then
-        isAnimating = false
-        btn.Text = "🎭 Free Animation"
+    root = char:WaitForChild("HumanoidRootPart")
+    if isZombie then
+        isZombie = false
+        hum.WalkSpeed = normalSpeed
+        btn.Text = "🧟 Zombie Run"
         btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
     end
 end)
 
 screenGui.Parent = game:GetService("CoreGui")
 
-print("DrunixHub: Free Animation loaded!")
+print("DrunixHub: Zombie Run loaded for MM2/Ragdoll!")
