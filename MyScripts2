@@ -1,9 +1,10 @@
--- DrunixHub :: Universal Run Animation (работает везде)
+-- DrunixHub :: Free Animation (как в том скрипте)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:WaitForChild("Humanoid")
 
-local isRunning = false
+local isAnimating = false
+local animTrack = nil
 
 -- Создаём кнопку
 local screenGui = Instance.new("ScreenGui")
@@ -15,7 +16,7 @@ btn.Size = UDim2.new(0, 200, 0, 55)
 btn.Position = UDim2.new(0.5, -100, 0.8, 0)
 btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
 btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-btn.Text = "🏃 Run Animation"
+btn.Text = "🎭 Free Animation"
 btn.TextSize = 22
 btn.Font = Enum.Font.GothamBold
 btn.BorderSizePixel = 0
@@ -24,20 +25,23 @@ corner.CornerRadius = UDim.new(0, 12)
 
 btn.MouseButton1Click:Connect(function()
     if not hum then return end
-    isRunning = not isRunning
+    isAnimating = not isAnimating
     
-    if isRunning then
-        -- Включаем анимацию бега через Humanoid
-        hum.WalkSpeed = 22
-        hum:SetStateEnabled(Enum.HumanoidStateType.Running, true)
-        hum:ChangeState(Enum.HumanoidStateType.Running)
+    if isAnimating then
+        -- Механика из того скрипта (бег)
+        local anim = Instance.new("Animation")
+        anim.AnimationId = "rbxassetid://507767531"  -- стандартный бег
+        animTrack = hum:LoadAnimation(anim)
+        animTrack:Play()
         
-        btn.Text = "🛑 Stop Run"
+        btn.Text = "🛑 Stop Animation"
         btn.BackgroundColor3 = Color3.fromRGB(180, 30, 30)
     else
-        hum.WalkSpeed = 16
-        hum:ChangeState(Enum.HumanoidStateType.Running)
-        btn.Text = "🏃 Run Animation"
+        if animTrack then
+            animTrack:Stop()
+            animTrack:Destroy()
+        end
+        btn.Text = "🎭 Free Animation"
         btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
     end
 end)
@@ -46,14 +50,13 @@ end)
 player.CharacterAdded:Connect(function(newChar)
     char = newChar
     hum = char:WaitForChild("Humanoid")
-    if isRunning then
-        isRunning = false
-        hum.WalkSpeed = 16
-        btn.Text = "🏃 Run Animation"
+    if isAnimating then
+        isAnimating = false
+        btn.Text = "🎭 Free Animation"
         btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
     end
 end)
 
 screenGui.Parent = game:GetService("CoreGui")
 
-print("DrunixHub: Run Animation loaded!")
+print("DrunixHub: Free Animation loaded!")
