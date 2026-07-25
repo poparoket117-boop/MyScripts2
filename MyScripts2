@@ -1,10 +1,9 @@
--- DrunixHub :: Universal Run Animation (все игры)
+-- DrunixHub :: Universal Run Animation (работает везде)
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:WaitForChild("Humanoid")
 
 local isRunning = false
-local animTrack = nil
 
 -- Создаём кнопку
 local screenGui = Instance.new("ScreenGui")
@@ -28,23 +27,18 @@ btn.MouseButton1Click:Connect(function()
     isRunning = not isRunning
     
     if isRunning then
-        -- Загружаем стандартную анимацию бега
-        local anim = Instance.new("Animation")
-        anim.AnimationId = "rbxassetid://507767531" -- ID бега
-        animTrack = hum:LoadAnimation(anim)
-        animTrack:Play()
+        -- Включаем анимацию бега через Humanoid
+        hum.WalkSpeed = 22
+        hum:SetStateEnabled(Enum.HumanoidStateType.Running, true)
+        hum:ChangeState(Enum.HumanoidStateType.Running)
         
         btn.Text = "🛑 Stop Run"
         btn.BackgroundColor3 = Color3.fromRGB(180, 30, 30)
-        hum.WalkSpeed = 22 -- небольшая скорость для эффекта
     else
-        if animTrack then
-            animTrack:Stop()
-            animTrack:Destroy()
-        end
+        hum.WalkSpeed = 16
+        hum:ChangeState(Enum.HumanoidStateType.Running)
         btn.Text = "🏃 Run Animation"
         btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-        hum.WalkSpeed = 16
     end
 end)
 
@@ -54,9 +48,9 @@ player.CharacterAdded:Connect(function(newChar)
     hum = char:WaitForChild("Humanoid")
     if isRunning then
         isRunning = false
+        hum.WalkSpeed = 16
         btn.Text = "🏃 Run Animation"
         btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-        hum.WalkSpeed = 16
     end
 end)
 
