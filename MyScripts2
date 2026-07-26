@@ -1,75 +1,20 @@
--- DrunixHub :: Zombie Run (для MM2 / Ragdoll)
+-- DrunixHub :: Zombie Animation Pack
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:WaitForChild("Humanoid")
-local root = char:WaitForChild("HumanoidRootPart")
+local animator = hum:WaitForChild("Animator")
 
-local isZombie = false
-local normalSpeed = 16
-local zombieSpeed = 50
+local animations = {
+    Run = "rbxassetid://892267099",
+    Walk = "rbxassetid://892267098",
+    Idle = "rbxassetid://892267097",
+    Jump = "rbxassetid://892267100",
+    Fall = "rbxassetid://892267101"
+}
 
--- Создаём кнопку
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "DrunixHub"
-screenGui.ResetOnSpawn = false
-
-local btn = Instance.new("TextButton", screenGui)
--- DrunixHub :: Animation by ID 80
-local player = game.Players.LocalPlayer
-local char = player.Character or player.CharacterAdded:Wait()
-local hum = char:WaitForChild("Humanoid")
-
-local isPlaying = false
-local animTrack = nil
-
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "DrunixHub"
-screenGui.ResetOnSpawn = false
-
-local btn = Instance.new("TextButton", screenGui)
-btn.Size = UDim2.new(0, 200, 0, 55)
-btn.Position = UDim2.new(0.5, -100, 0.8, 0)
-btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-btn.Text = "🎭 Anim 80"
-btn.TextSize = 22
-btn.Font = Enum.Font.GothamBold
-btn.BorderSizePixel = 0
-local corner = Instance.new("UICorner", btn)
-corner.CornerRadius = UDim.new(0, 12)
-
-btn.MouseButton1Click:Connect(function()
-    if not hum then return end
-    isPlaying = not isPlaying
-    
-    if isPlaying then
-        local anim = Instance.new("Animation")
-        anim.AnimationId = "rbxassetid://80"  -- ID 80
-        animTrack = hum:LoadAnimation(anim)
-        animTrack:Play()
-        
-        btn.Text = "🛑 Stop"
-        btn.BackgroundColor3 = Color3.fromRGB(180, 30, 30)
-    else
-        if animTrack then
-            animTrack:Stop()
-            animTrack:Destroy()
-        end
-        btn.Text = "🎭 Anim 80"
-        btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-    end
-end)
-
-player.CharacterAdded:Connect(function(newChar)
-    char = newChar
-    hum = char:WaitForChild("Humanoid")
-    if isPlaying then
-        isPlaying = false
-        btn.Text = "🎭 Anim 80"
-        btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-    end
-end)
-
-screenGui.Parent = game:GetService("CoreGui")
-
-print("DrunixHub: Animation 80 loaded!")
+for _, id in pairs(animations) do
+    local anim = Instance.new("Animation")
+    anim.AnimationId = id
+    local track = animator:LoadAnimation(anim)
+    track:Play()
+end
